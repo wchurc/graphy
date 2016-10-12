@@ -26,15 +26,19 @@ class DisplayGraph(object):
 
         self.graph = graph
         self.size = int(math.sqrt(len(graph.vertices)))
-        self.scale = 50 
-        self.window = window
+        self.scale = 50
+
+        self.window = window or turtle.Screen()
+        self.window.tracer(0, 0)
         self.t = turtle.Turtle(visible=False)
         self.t.speed(0)
+
         self.vertices = []
         self.edges = []
-        self.initialize_vertices()
+        self.populate()
+        self.active = True
 
-    def initialize_vertices(self):
+    def populate(self):
         x, y = 0, 0
         for v in self.graph.vertices:
             self.vertices.append(Vertex(x, y))
@@ -48,33 +52,43 @@ class DisplayGraph(object):
                 if w > i:
                     self.edges.append(Edge(self.vertices[i], self.vertices[w]))
 
-    def display(self):
+    def update(self):
+        pass
 
-        self.window = self.window or turtle.Screen()
-        self.window.tracer(0, 0)
-        
+    def draw(self):
         for v in self.vertices:
             self.draw_vertex(v)
-        
+
         for e in self.edges:
             self.draw_edge(e)
-                
+        
         self.window.update()
+
+    def display(self):
+
+        while self.active:
+            self.active = False
+            self.update()
+            self.draw()
+        
         self.window.exitonclick()
 
     
     def draw_vertex(self, v):
         
         self.t.up()
-        self.t.setpos(v.x * self.scale, v.y * self.scale)
+        self.t.setpos(v.x * self.scale,  
+                      v.y * self.scale)
         self.t.down()
         self.t.dot(10)
         
 
     def draw_edge(self, e):
         self.t.up()
-        self.t.setpos(e.v.x * self.scale, e.v.y * self.scale)
+        self.t.setpos(e.v.x * self.scale,
+                      e.v.y * self.scale)
         self.t.down()
-        self.t.setpos(e.w.x * self.scale, e.w.y * self.scale)
+        self.t.setpos(e.w.x * self.scale,
+                      e.w.y * self.scale)
 
 
