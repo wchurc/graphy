@@ -18,6 +18,11 @@ class Vertex(object):
 
 
 class DisplayGraph(object):
+
+    c1 = 2
+    c2 = 1
+    c3 = 1
+    c4 = 0.1
     
     def __init__(self, graph, window=None):
 
@@ -90,5 +95,22 @@ class DisplayGraph(object):
         self.t.down()
         self.t.setpos(e.w.x * self.scale,
                       e.w.y * self.scale)
+
+    @classmethod
+    def distance(cls, x1, y1, x2, y2):
+        return math.sqrt((x1-x2)**2 + (y1-y2)**2)
+    
+    @classmethod
+    def attract(cls, d):
+        return cls.c1 * math.log10(d/cls.c2)
+
+    @classmethod
+    def repel(cls, d):
+        return cls.c3/d**2
+
+    @staticmethod
+    def normal_to(x1, y1, x2, y2):
+        """ Returns the normal vector from x1,y1 to x2,y2"""
+        pass
 
 
