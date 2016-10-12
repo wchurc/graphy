@@ -4,43 +4,77 @@ from graph import Graph
 
 
 class Edge(object):
-    pass
+    
+    def __init__(self, v, w):
+        self.v = v
+        self.w = w
 
 
 class Vertex(object):
-    pass
+    
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
 
 class DisplayGraph(object):
     
     def __init__(self, graph, window=None):
+
         if not isinstance(graph, Graph):
             raise Exception("DisplayGraph must be initialized with a Graph")
+
         self.graph = graph
         self.size = int(math.sqrt(len(graph.vertices)))
+        self.scale = 50 
         self.window = window
+        self.t = turtle.Turtle(visible=False)
+        self.t.speed(0)
+        self.vertices = []
+        self.edges = []
+        self.initialize_vertices()
 
-    def display(self):
-        self.window == self.window or turtle.Screen()
+    def initialize_vertices(self):
         x, y = 0, 0
-        for i in range(len(self.graph.vertices)):
-            self.draw_vertex(x * 50, y * 50)
+        for v in self.graph.vertices:
+            self.vertices.append(Vertex(x, y))
             x += 1
             if x >= self.size:
                 x = 0
                 y += 1
 
-    
-    def draw_vertex(self, x, y):
-        t = turtle.Turtle()
-        t.speed(0)
-        t.up()
-        t.setpos(x, y)
-        t.down()
-        t.circle(3)
-        del t
+        for i, v in enumerate(self.graph.vertices):
+            for w in v:
+                if w > i:
+                    self.edges.append(Edge(self.vertices[i], self.vertices[w]))
 
-    def draw_edge():
-        pass
+    def display(self):
+
+        self.window = self.window or turtle.Screen()
+        self.window.tracer(0, 0)
+        
+        for v in self.vertices:
+            self.draw_vertex(v)
+        
+        for e in self.edges:
+            self.draw_edge(e)
+                
+        self.window.update()
+        self.window.exitonclick()
+
+    
+    def draw_vertex(self, v):
+        
+        self.t.up()
+        self.t.setpos(v.x * self.scale, v.y * self.scale)
+        self.t.down()
+        self.t.dot(10)
+        
+
+    def draw_edge(self, e):
+        self.t.up()
+        self.t.setpos(e.v.x * self.scale, e.v.y * self.scale)
+        self.t.down()
+        self.t.setpos(e.w.x * self.scale, e.w.y * self.scale)
 
 

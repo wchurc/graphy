@@ -1,6 +1,3 @@
-"""
-A python implementation of http://algs4.cs.princeton.edu/41graph/
-"""
 from random import randrange
 
 
@@ -18,13 +15,6 @@ class Graph(object):
         if v not in self.vertices[w] and w not in self.vertices[v]:
             self.vertices[w].add(v)
             self.vertices[v].add(w)
-
-    def adj(self, v):
-        """ Yield vertices adjacent to v"""
-        if v < len(self.vertices):
-            for adjacent in self.vertices[v]:
-                yield adjacent
-
 
 def random_graph(V=50, E=50):
     graph = Graph(V)
