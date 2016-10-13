@@ -24,7 +24,7 @@ class DisplayGraph(object):
     c2 = 50
     c3 = 100
     c4 = 10 
-    M = 100
+    M = 300
     
     def __init__(self, graph, window=None):
 
@@ -39,6 +39,7 @@ class DisplayGraph(object):
         self.window.tracer(0, 0)
         self.t = turtle.Turtle(visible=False)
         self.t.speed(0)
+        self.t.pen(pencolor="blue",fillcolor="red")
 
         self.vertices = []
         self.edges = []
@@ -60,13 +61,13 @@ class DisplayGraph(object):
                     self.edges.append(Edge(self.vertices[i], self.vertices[w]))
 
     def update(self):
-        
         for v in self.vertices:
             for w in self.vertices:
                 if w is not v:
                     d = self.distance(v.x, v.y, w.x, w.y)
                     f = self.repulsion(d) * DisplayGraph.c4
                     x, y = [f*x for x in self.unit_to(w.x, w.y, v.x, v.y)]
+                    delta = math.sqrt(x**2 + y**2)
                     v.x += x
                     v.y += y
 
@@ -78,6 +79,7 @@ class DisplayGraph(object):
             e.v.y += y
             e.w.x -= x
             e.w.y -= y
+        
 
     def draw(self):
         for v in self.vertices:
@@ -121,7 +123,8 @@ class DisplayGraph(object):
 
     @classmethod
     def repulsion(cls, d):
-        return cls.c3/d**2
+        denom = d if d > cls.c2 else cls.c2
+        return cls.c3/denom**2
 
     @staticmethod
     def distance(x1, y1, x2, y2):

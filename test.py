@@ -1,3 +1,4 @@
+import random
 import sys
 from graph import random_graph
 from displaygraph import DisplayGraph
@@ -12,7 +13,10 @@ if __name__ == '__main__':
         E = int(sys.argv[2])
 
     g = random_graph(V=V, E=E)
-    print(g)
+    for i, v in enumerate(g.vertices):
+        if not v:
+            g.add_edge(i, random.randrange(0,len(g.vertices)))
+
     dg = DisplayGraph(g)
 
     dg.display()
