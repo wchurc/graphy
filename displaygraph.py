@@ -109,8 +109,11 @@ class DisplayGraph(object):
         return cls.c3/d**2
 
     @staticmethod
-    def normal_to(x1, y1, x2, y2):
-        """ Returns the normal vector from x1,y1 to x2,y2"""
-        pass
+    def unit_to(x1, y1, x2, y2):
+        """ Returns the unit vector from x1,y1 to x2,y2"""
+        x3 = x2 - x1
+        y3 = y2 - y1
+        mag = math.sqrt(x3**2 + y3**2)
+        return (x3/mag, y3/mag)
 
 
