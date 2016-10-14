@@ -33,12 +33,16 @@ class DisplayGraph(object):
 
         self.graph = graph
         self.size = int(math.sqrt(len(graph.vertices)))
-        self.scale = 25 
 
         self.window = window or turtle.Screen()
         self.window.tracer(0, 0)
         self.t = turtle.Turtle(visible=False)
         self.t.speed(0)
+
+        self.xscale = (self.window.window_width() // 2) // self.size 
+        self.yscale = (self.window.window_height() // 2) // self.size
+        self.xoffset = -self.window.window_width() // 4
+        self.yoffset = -self.window.window_height() // 4
 
         self.vertices = []
         self.edges = []
@@ -47,7 +51,8 @@ class DisplayGraph(object):
     def populate(self):
         x, y = 0, 0
         for v in self.graph.vertices:
-            self.vertices.append(Vertex(x * self.scale,  y * self.scale))
+            self.vertices.append(Vertex((x * self.xscale) + self.xoffset,
+                                        (y * self.yscale) + self.yoffset))
             x += 1
             if x >= self.size:
                 x = 0
