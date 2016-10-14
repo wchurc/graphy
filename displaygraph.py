@@ -33,18 +33,16 @@ class DisplayGraph(object):
 
         self.graph = graph
         self.size = int(math.sqrt(len(graph.vertices)))
-        self.scale = 50 
+        self.scale = 25 
 
         self.window = window or turtle.Screen()
         self.window.tracer(0, 0)
         self.t = turtle.Turtle(visible=False)
         self.t.speed(0)
-        self.t.pen(pencolor="blue",fillcolor="red")
 
         self.vertices = []
         self.edges = []
         self.populate()
-        self.active = True
 
     def populate(self):
         x, y = 0, 0
@@ -82,11 +80,12 @@ class DisplayGraph(object):
         
 
     def draw(self):
-        for v in self.vertices:
-            self.draw_vertex(v)
 
         for e in self.edges:
             self.draw_edge(e)
+        
+        for v in self.vertices:
+            self.draw_vertex(v)
         
         self.window.update()
 
@@ -102,14 +101,17 @@ class DisplayGraph(object):
     
     def draw_vertex(self, v):
         
+        self.t.color('black')
         self.t.up()
         self.t.setpos(v.x,  
                       v.y)
         self.t.down()
-        self.t.dot(10)
+        self.t.dot(5)
         
 
     def draw_edge(self, e):
+
+        self.t.color('gray')
         self.t.up()
         self.t.setpos(e.v.x,
                       e.v.y)
