@@ -1,4 +1,4 @@
-from random import randrange
+from random import randrange, choice
 from queue import Queue
 
 class Graph(object):
@@ -31,9 +31,18 @@ class Graph(object):
         return marked
 
 
-def random_graph(V=50, E=50):
+def random_graph(V=50, E=50, connected=False):
     graph = Graph(V)
     for i in range(E):
         graph.add_edge(randrange(0, V), randrange(0, V))
+    if not connected:
+        return graph
+    component = max([graph.connected_component(x) for x in range(len(graph.vertices))])
+    if len(component) < len(graph.vertices):
+        disconnected = [x for x in range(len(graph.vertices)) if x not in component]
+        for v in disconnected:
+            graph.add_edge(v, choice(list(component)))
     return graph
+
+
 

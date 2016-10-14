@@ -12,11 +12,7 @@ if __name__ == '__main__':
         V = int(sys.argv[1])
         E = int(sys.argv[2])
 
-    g = random_graph(V=V, E=E)
-    for i, v in enumerate(g.vertices):
-        if not v:
-            g.add_edge(i, random.randrange(0,len(g.vertices)))
-
+    g = random_graph(V=V, E=E, connected=True)
     dg = DisplayGraph(g)
 
     dg.display()
