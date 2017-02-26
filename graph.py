@@ -1,5 +1,6 @@
 from random import randrange, choice
 from queue import Queue
+import math
 
 
 class Edge(object):
@@ -14,13 +15,33 @@ class Vertex(object):
     def __init__(self, x, y):
         self.x = x
         self.y = y
+        self._neighbors = set()
+
+    def __contains__(self, v_index):
+        return v_index in self._neighbors
+
+    def __iter__(self):
+        return iter(self._neighbors)
+
+    def add(self, v_index):
+        self._neighbors.add(v_index)
+
+    def distance_to(self, w):
+        """ Returns the from self to Vertex w"""
+        return math.sqrt((self.x - w.x)**2 + (self.y - w.y)**2)
+
+    def unit_to(self, w):
+        """ Returns the unit vector from self to Vertex w"""
+        x3 = w.x - self.x
+        y3 = w.y - self.y
+        mag = math.sqrt(x3**2 + y3**2)
+        return (x3/mag, y3/mag)
 
 
 class Graph(object):
 
     def __init__(self, V=50):
-        self.vertices = [set() for x in range(V)]
-        self._cc = []
+        self.vertices = [Vertex(None, None) for x in range(V)]
 
     def __repr__(self):
         return '\n'.join([str(v) for v in self.vertices])
@@ -47,7 +68,7 @@ class Graph(object):
 
 def random_graph(V=50, E=50, connected=False):
     graph = Graph(V)
-    for i in range(E):
+    for _ in range(E):
         graph.add_edge(randrange(0, V), randrange(0, V))
     if not connected:
         return graph

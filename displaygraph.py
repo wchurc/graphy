@@ -9,9 +9,11 @@ class DisplayEdge(Edge):
     def __init__(self, v, w):
         super(DisplayEdge, self).__init__(v, w)
         self.color = 'gray'
+        self.size = 2
 
     def draw(self, t):
         t.color(self.color)
+        t.pensize(self.size)
         t.up()
         t.setpos(self.v.x, self.v.y)
         t.down()
@@ -22,14 +24,14 @@ class DisplayVertex(Vertex):
 
     def __init__(self, x, y):
         super(DisplayVertex, self).__init__(x, y)
-        self.color = 'black'
+        self.color = 'blue'
+        self.size = 8
 
     def draw(self, t):
-        t.color(self.color)
         t.up()
         t.setpos(self.x, self.y)
         t.down()
-        t.dot(5)
+        t.dot(self.size, self.color)
 
 
 class DisplayGraph(object):
@@ -81,17 +83,17 @@ class DisplayGraph(object):
         for v in self.vertices:
             for w in self.vertices:
                 if w is not v:
-                    d = self.distance(v.x, v.y, w.x, w.y)
+                    d = v.distance_to(w)
                     f = self.repulsion(d) * DisplayGraph.c4
-                    x, y = [f*x for x in self.unit_to(w.x, w.y, v.x, v.y)]
+                    x, y = [f*x for x in w.unit_to(v)]
                     delta = math.sqrt(x**2 + y**2)
                     v.x += x
                     v.y += y
 
         for e in self.edges:
-            d = self.distance(e.v.x, e.v.y, e.w.x, e.w.y)
+            d = e.v.distance_to(e.w)
             f = self.attraction(d) * DisplayGraph.c4
-            x, y = [f*x for x in self.unit_to(e.v.x, e.v.y, e.w.x, e.w.y)]
+            x, y = [f*x for x in e.v.unit_to(e.w)]
             e.v.x += x
             e.v.y += y
             e.w.x -= x
@@ -125,17 +127,3 @@ class DisplayGraph(object):
     def repulsion(cls, d):
         denom = d if d > cls.c2 else cls.c2
         return cls.c3/denom**2
-
-    @staticmethod
-    def distance(x1, y1, x2, y2):
-        return math.sqrt((x1-x2)**2 + (y1-y2)**2)
-
-    @staticmethod
-    def unit_to(x1, y1, x2, y2):
-        """ Returns the unit vector from x1,y1 to x2,y2"""
-        x3 = x2 - x1
-        y3 = y2 - y1
-        mag = math.sqrt(x3**2 + y3**2)
-        return (x3/mag, y3/mag)
-
-
