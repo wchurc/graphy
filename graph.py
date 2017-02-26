@@ -1,16 +1,30 @@
 from random import randrange, choice
 from queue import Queue
 
+
+class Edge(object):
+
+    def __init__(self, v, w):
+        self.v = v
+        self.w = w
+
+
+class Vertex(object):
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+
 class Graph(object):
-    
+
     def __init__(self, V=50):
         self.vertices = [set() for x in range(V)]
-        self.edges = 0
         self._cc = []
-        
+
     def __repr__(self):
         return '\n'.join([str(v) for v in self.vertices])
-    
+
     def add_edge(self, v, w):
         """ Add edge v-w to the graph"""
         if v not in self.vertices[w] and w not in self.vertices[v] and v is not w:

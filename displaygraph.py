@@ -1,21 +1,35 @@
 import time
 import turtle
 import math
-from graph import Graph
+from graph import Graph, Edge, Vertex
 
 
-class Edge(object):
-    
+class DisplayEdge(Edge):
+
     def __init__(self, v, w):
-        self.v = v
-        self.w = w
+        super(DisplayEdge, self).__init__(v, w)
+        self.color = 'gray'
+
+    def draw(self, t):
+        t.color(self.color)
+        t.up()
+        t.setpos(self.v.x, self.v.y)
+        t.down()
+        t.setpos(self.w.x, self.w.y)
 
 
-class Vertex(object):
-    
+class DisplayVertex(Vertex):
+
     def __init__(self, x, y):
-        self.x = x
-        self.y = y
+        super(DisplayVertex, self).__init__(x, y)
+        self.color = 'black'
+
+    def draw(self, t):
+        t.color(self.color)
+        t.up()
+        t.setpos(self.x, self.y)
+        t.down()
+        t.dot(5)
 
 
 class DisplayGraph(object):
@@ -23,9 +37,9 @@ class DisplayGraph(object):
     c1 = 10
     c2 = 50
     c3 = 100
-    c4 = 10 
+    c4 = 10
     M = 300
-    
+
     def __init__(self, graph, window=None):
 
         if not isinstance(graph, Graph):
@@ -39,7 +53,7 @@ class DisplayGraph(object):
         self.t = turtle.Turtle(visible=False)
         self.t.speed(0)
 
-        self.xscale = (self.window.window_width() // 2) // self.size 
+        self.xscale = (self.window.window_width() // 2) // self.size
         self.yscale = (self.window.window_height() // 2) // self.size
         self.xoffset = -self.window.window_width() // 4
         self.yoffset = -self.window.window_height() // 4
@@ -51,7 +65,7 @@ class DisplayGraph(object):
     def populate(self):
         x, y = 0, 0
         for v in self.graph.vertices:
-            self.vertices.append(Vertex((x * self.xscale) + self.xoffset,
+            self.vertices.append(DisplayVertex((x * self.xscale) + self.xoffset,
                                         (y * self.yscale) + self.yoffset))
             x += 1
             if x >= self.size:
@@ -61,7 +75,7 @@ class DisplayGraph(object):
         for i, v in enumerate(self.graph.vertices):
             for w in v:
                 if w > i:
-                    self.edges.append(Edge(self.vertices[i], self.vertices[w]))
+                    self.edges.append(DisplayEdge(self.vertices[i], self.vertices[w]))
 
     def update(self):
         for v in self.vertices:
@@ -82,16 +96,16 @@ class DisplayGraph(object):
             e.v.y += y
             e.w.x -= x
             e.w.y -= y
-        
+
 
     def draw(self):
 
         for e in self.edges:
-            self.draw_edge(e)
-        
+            e.draw(self.t)
+
         for v in self.vertices:
-            self.draw_vertex(v)
-        
+            v.draw(self.t)
+
         self.window.update()
 
     def display(self):
@@ -100,30 +114,9 @@ class DisplayGraph(object):
             self.update()
             self.t.clear()
             self.draw()
-        
+
         self.window.exitonclick()
 
-    
-    def draw_vertex(self, v):
-        
-        self.t.color('black')
-        self.t.up()
-        self.t.setpos(v.x,  
-                      v.y)
-        self.t.down()
-        self.t.dot(5)
-        
-
-    def draw_edge(self, e):
-
-        self.t.color('gray')
-        self.t.up()
-        self.t.setpos(e.v.x,
-                      e.v.y)
-        self.t.down()
-        self.t.setpos(e.w.x,
-                      e.w.y)
-    
     @classmethod
     def attraction(cls, d):
         return cls.c1 * math.log10(d/cls.c2)
