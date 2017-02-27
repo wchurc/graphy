@@ -5,7 +5,7 @@ from displaygraph import DisplayGraph
 
 
 if __name__ == '__main__':
-    
+
     V = 100
     E = 100
     if len(sys.argv) >= 3:

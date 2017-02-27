@@ -65,8 +65,15 @@ class Graph(object):
                     q.put(w)
         return marked
 
+    def djikstra(self, v, w):
+        pass
+
+    def a_star(self, v, w):
+        pass
+
 
 def random_graph(V=50, E=50, connected=False):
+    """ Generates a random graph with V vertices and E edges"""
     graph = Graph(V)
     for _ in range(E):
         graph.add_edge(randrange(0, V), randrange(0, V))

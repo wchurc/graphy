@@ -4,10 +4,14 @@ import math
 from graph import Graph, Edge, Vertex
 
 
-class DisplayEdge(Edge):
+class DisplayEdge(object):
 
     def __init__(self, v, w):
-        super(DisplayEdge, self).__init__(v, w)
+
+        assert isinstance(v, DisplayVertex) and isinstance(w, DisplayVertex)
+
+        self.v = v
+        self.w = w
         self.color = 'gray'
         self.size = 2
 
@@ -20,19 +24,43 @@ class DisplayEdge(Edge):
         t.setpos(self.w.x, self.w.y)
 
 
-class DisplayVertex(Vertex):
+class DisplayVertex(object):
 
-    def __init__(self, x, y):
-        super(DisplayVertex, self).__init__(x, y)
+    def __init__(self, vertex):
+
+        assert isinstance(vertex, Vertex)
+
+        self.v = vertex
         self.color = 'blue'
         self.size = 8
 
     def draw(self, t):
         t.up()
-        t.setpos(self.x, self.y)
+        t.setpos(self.v.x, self.v.y)
         t.down()
         t.dot(self.size, self.color)
 
+    @property
+    def x(self):
+        return self.v.x
+
+    @x.setter
+    def x(self, value):
+        self.v.x = value
+
+    @property
+    def y(self):
+        return self.v.y
+
+    @y.setter
+    def y(self, value):
+        self.v.y = value
+
+    def distance_to(self, w):
+        return self.v.distance_to(w)
+
+    def unit_to(self, w):
+        return self.v.unit_to(w)
 
 class DisplayGraph(object):
 
@@ -65,15 +93,21 @@ class DisplayGraph(object):
         self.populate()
 
     def populate(self):
+
         x, y = 0, 0
+
+        # Create DisplayVertices
         for v in self.graph.vertices:
-            self.vertices.append(DisplayVertex((x * self.xscale) + self.xoffset,
-                                        (y * self.yscale) + self.yoffset))
+            v.x = (x * self.xscale) + self.xoffset
+            v.y = (y * self.yscale) + self.yoffset
+            self.vertices.append(DisplayVertex(v))
+
             x += 1
             if x >= self.size:
                 x = 0
                 y += 1
 
+        # Create DisplayEdges
         for i, v in enumerate(self.graph.vertices):
             for w in v:
                 if w > i:
