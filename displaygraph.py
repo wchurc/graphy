@@ -31,14 +31,24 @@ class DisplayVertex(object):
         assert isinstance(vertex, Vertex)
 
         self.v = vertex
-        self.color = 'blue'
-        self.size = 8
+        self.size = 5
+        self._color = 'blue'
+        self._marked_color = 'yellow'
+        self._highlighted_color = 'red'
+        self.highlighted = False
 
     def draw(self, t):
         t.up()
-        t.setpos(self.v.x, self.v.y)
+        t.setpos(self.v.x + self.size, self.v.y)
+        t.setheading(90)
         t.down()
-        t.dot(self.size, self.color)
+        t.fillcolor(self.color)
+        t.pencolor('black')
+        t.begin_fill()
+        t.circle(self.size)
+        t.end_fill()
+        #t.dot(self.size, self.color)
+
 
     @property
     def x(self):
@@ -56,11 +66,20 @@ class DisplayVertex(object):
     def y(self, value):
         self.v.y = value
 
+    @property
+    def color(self):
+        if self.highlighted:
+            return self._highlighted_color
+        if self.v.marked:
+            return self._marked_color
+        return self._color
+
     def distance_to(self, w):
         return self.v.distance_to(w)
 
     def unit_to(self, w):
         return self.v.unit_to(w)
+
 
 class DisplayGraph(object):
 
@@ -150,6 +169,14 @@ class DisplayGraph(object):
             self.update()
             self.t.clear()
             self.draw()
+
+        path = self.graph.dijkstra(0, len(self.graph.vertices) - 1)
+
+        for v in path:
+            self.vertices[v].highlighted = True
+
+        self.t.clear()
+        self.draw()
 
         self.window.exitonclick()
 
