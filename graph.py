@@ -1,5 +1,6 @@
+from collections import namedtuple
 from random import randrange, choice
-from queue import Queue
+from queue import Queue, PriorityQueue
 import math
 
 
@@ -16,6 +17,7 @@ class Vertex(object):
         self.x = x
         self.y = y
         self._neighbors = set()
+        self.marked = False
 
     def __contains__(self, v_index):
         return v_index in self._neighbors
@@ -23,6 +25,9 @@ class Vertex(object):
     def __iter__(self):
         return iter(self._neighbors)
 
+    def __repr__(self):
+        return "x: {0}, y: {1}\nneighbors: {2}".format(self.x, self.y,
+                                                       self._neighbors.__repr__())
     def add(self, v_index):
         self._neighbors.add(v_index)
 
@@ -36,6 +41,12 @@ class Vertex(object):
         y3 = w.y - self.y
         mag = math.sqrt(x3**2 + y3**2)
         return (x3/mag, y3/mag)
+
+    def cost_to(self, w):
+        result = self.distance_to(w)
+
+        return self.distance_to(w)
+
 
 
 class Graph(object):
@@ -65,10 +76,57 @@ class Graph(object):
                     q.put(w)
         return marked
 
-    def djikstra(self, v, w):
-        pass
+    def dijkstra(self, start, finish):
 
-    def a_star(self, v, w):
+        def build_path():
+            path = []
+            node = finish
+            while node != start:
+                path.append(node)
+                node = seen.get(node).prev
+
+            path.append(start)
+            return reversed(path)
+
+        Data = namedtuple('Data', ['cost', 'prev'])
+
+        seen = {start : Data(0, start)}
+        done = set()
+
+        pq = PriorityQueue()
+        pq.put((0, start))
+
+        while not pq.empty():
+            cost, v = pq.get()
+
+            self.vertices[v].marked = True
+
+            # Check if finished
+            if v == finish:
+                return build_path()
+
+            # There may be duplicates in the pq so check if v has been done already
+            if v in done:
+                continue
+
+            # Check every neighbor of v
+            for w in self.vertices[v]:
+                assert w is not None
+                if w not in done:
+
+                    self.vertices[w].marked = True
+
+                    w_cost = seen.get(v).cost + self.vertices[v].cost_to(self.vertices[w])
+
+                    if w not in seen or seen.get(w).cost > w_cost:
+                        # Add to pq and update seen
+                        seen[w] = Data(w_cost, v)
+                        pq.put((w_cost, w))
+
+            done.add(v)
+
+
+    def a_star(self, start, finish):
         pass
 
 
