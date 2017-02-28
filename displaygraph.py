@@ -2,6 +2,7 @@ import time
 import turtle
 import math
 from graph import Graph, Edge, Vertex
+from queue import Queue
 
 
 class DisplayEdge(object):
@@ -36,6 +37,7 @@ class DisplayVertex(object):
         self._marked_color = 'yellow'
         self._highlighted_color = 'red'
         self.highlighted = False
+        self.selected = False
 
     def draw(self, t):
         t.up()
@@ -43,7 +45,10 @@ class DisplayVertex(object):
         t.setheading(90)
         t.down()
         t.fillcolor(self.color)
-        t.pencolor('black')
+        if self.selected:
+            t.pencolor('orange')
+        else:
+            t.pencolor('black')
         t.begin_fill()
         t.circle(self.size)
         t.end_fill()
@@ -111,6 +116,8 @@ class DisplayGraph(object):
         self.edges = []
         self.populate()
 
+        self.selected_queue = Queue(maxsize=2)
+
     def populate(self):
 
         x, y = 0, 0
@@ -170,15 +177,57 @@ class DisplayGraph(object):
             self.t.clear()
             self.draw()
 
-        path = self.graph.dijkstra(0, len(self.graph.vertices) - 1)
+        self.window.onclick(self.handle_click)
+        self.t.getscreen()._root.mainloop()
+        #self.window.exitonclick()
 
-        for v in path:
-            self.vertices[v].highlighted = True
+    def get_vertex(self, x, y):
+        """ Returns the index of the first vertex that collides with the coordinates (x,y).
+        If no collision return None"""
+
+        # Create a temporary Vertex for Vertex.distance_to
+        click_location = Vertex(x, y)
+
+        for i, v in enumerate(self.vertices):
+            if v.distance_to(click_location) <= v.size:
+                print("Found: {}".format(i))
+                return i
+        print("Couldn't find a vertex")
+        return None
+
+    def select_vertex(self, i):
+        self.vertices[i].selected = True
+        self.selected_queue.put(i)
+
+        if self.selected_queue.full():
+            a = self.selected_queue.get()
+            b = self.selected_queue.get()
+            self.draw_path(a, b)
+            return
 
         self.t.clear()
         self.draw()
 
-        self.window.exitonclick()
+    def handle_click(self, x, y):
+        vertex_index = self.get_vertex(x, y)
+        if vertex_index is not None:
+            self.select_vertex(vertex_index)
+
+    def draw_path(self, a, b):
+        for v in self.vertices:
+            v.v.marked = False
+            v.highlighted = False
+            v.selected = False
+
+        path = self.graph.dijkstra(a, b)
+
+        self.t.clear()
+        self.draw()
+
+        for i in path:
+            self.vertices[i].highlighted = True
+            self.vertices[i].draw(self.t)
+
 
     @classmethod
     def attraction(cls, d):
