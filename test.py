@@ -6,8 +6,8 @@ from displaygraph import DisplayGraph
 
 if __name__ == '__main__':
 
-    V = 100
-    E = 100
+    V = 50
+    E = 50
     if len(sys.argv) >= 3:
         V = int(sys.argv[1])
         E = int(sys.argv[2])
