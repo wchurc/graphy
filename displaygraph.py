@@ -1,8 +1,8 @@
 import time
 import turtle
 import math
-from graph import Graph, Edge, Vertex
-from queue import Queue
+from graph import Graph, Edge, Vertex, random_graph
+from collections import deque
 
 
 class DisplayEdge(object):
@@ -13,7 +13,6 @@ class DisplayEdge(object):
 
         self.v = v
         self.w = w
-        self.color = 'gray'
         self.size = 2
 
     def draw(self, t):
@@ -24,6 +23,12 @@ class DisplayEdge(object):
         t.down()
         t.setpos(self.w.x, self.w.y)
 
+    @property
+    def color(self):
+        if self.v.highlighted and self.w.highlighted:
+            return 'red'
+        return 'gray'
+
 
 class DisplayVertex(object):
 
@@ -32,7 +37,7 @@ class DisplayVertex(object):
         assert isinstance(vertex, Vertex)
 
         self.v = vertex
-        self.size = 5
+        self.size = 7
         self._color = 'blue'
         self._marked_color = 'yellow'
         self._highlighted_color = 'red'
@@ -45,6 +50,7 @@ class DisplayVertex(object):
         t.setheading(90)
         t.down()
         t.fillcolor(self.color)
+        t.pensize(2)
         if self.selected:
             t.pencolor('orange')
         else:
@@ -92,7 +98,7 @@ class DisplayGraph(object):
     c2 = 50
     c3 = 100
     c4 = 10
-    M = 300
+    M = 150
 
     def __init__(self, graph, window=None):
 
@@ -116,7 +122,12 @@ class DisplayGraph(object):
         self.edges = []
         self.populate()
 
-        self.selected_queue = Queue(maxsize=2)
+        self.selected_queue = deque(maxlen=2)
+
+        self.buttons = []
+        self.buttons.append(Button(-300, 300, "a_star", self.draw_a_star))
+        self.buttons.append(Button(-300, 330, "dijkstra", self.draw_dijkstra))
+        self.buttons.append(Button(-300, 360, "new graph", self.new_graph))
 
     def populate(self):
 
@@ -160,7 +171,11 @@ class DisplayGraph(object):
             e.w.y -= y
 
 
-    def draw(self):
+    def draw(self, buttons=True):
+
+        if buttons:
+            for b in self.buttons:
+                b.draw(self.t)
 
         for e in self.edges:
             e.draw(self.t)
@@ -175,7 +190,9 @@ class DisplayGraph(object):
         for x in range(DisplayGraph.M):
             self.update()
             self.t.clear()
-            self.draw()
+            self.draw(buttons=False)
+
+        self.draw()
 
         self.window.onclick(self.handle_click)
         self.t.getscreen()._root.mainloop()
@@ -190,44 +207,76 @@ class DisplayGraph(object):
 
         for i, v in enumerate(self.vertices):
             if v.distance_to(click_location) <= v.size:
-                print("Found: {}".format(i))
                 return i
-        print("Couldn't find a vertex")
         return None
 
     def select_vertex(self, i):
         self.vertices[i].selected = True
-        self.selected_queue.put(i)
 
-        if self.selected_queue.full():
-            a = self.selected_queue.get()
-            b = self.selected_queue.get()
-            self.draw_path(a, b)
-            return
+        if len(self.selected_queue) == 2:
+            v = self.selected_queue.popleft()
+            self.vertices[v].selected = False
+
+        self.selected_queue.append(i)
 
         self.t.clear()
         self.draw()
 
     def handle_click(self, x, y):
+        self.button_dispatch(x, y)
+
         vertex_index = self.get_vertex(x, y)
         if vertex_index is not None:
             self.select_vertex(vertex_index)
 
-    def draw_path(self, a, b):
+    def draw_dijkstra(self):
         for v in self.vertices:
             v.v.marked = False
             v.highlighted = False
             v.selected = False
 
-        path = self.graph.dijkstra(a, b)
+        if len(self.selected_queue) == 2:
+            a, b = iter(self.selected_queue)
+            path = self.graph.dijkstra(a, b)
 
-        self.t.clear()
-        self.draw()
+            for i in path:
+                self.vertices[i].highlighted = True
+                self.vertices[i].draw(self.t)
 
-        for i in path:
-            self.vertices[i].highlighted = True
-            self.vertices[i].draw(self.t)
+            self.t.clear()
+            self.draw()
 
+    def draw_a_star(self):
+        for v in self.vertices:
+            v.v.marked = False
+            v.highlighted = False
+            v.selected = False
+
+        if len(self.selected_queue) == 2:
+            a, b = iter(self.selected_queue)
+            path = self.graph.a_star(a, b)
+
+            for i in path:
+                self.vertices[i].highlighted = True
+                self.vertices[i].draw(self.t)
+
+            self.t.clear()
+            self.draw()
+
+    def button_dispatch(self, x, y):
+        for button in self.buttons:
+            if x >= button.x and x <= (button.y + button.width) and y >= button.y and y <= (button.y + button.height):
+                button.onclick()
+
+    def new_graph(self):
+        self.selected_queue.clear()
+        self.vertices = []
+        self.edges = []
+
+        self.graph = random_graph(connected=True)
+
+        self.populate()
+        self.display()
 
     @classmethod
     def attraction(cls, d):
@@ -237,3 +286,36 @@ class DisplayGraph(object):
     def repulsion(cls, d):
         denom = d if d > cls.c2 else cls.c2
         return cls.c3/denom**2
+
+
+class Button(object):
+
+    def __init__(self, x, y, text, func):
+        self.x = x
+        self.y = y
+        self.text = text
+        self.fontsize = 12
+        self.height = 16
+        self.width = 12 * len(self.text)
+        self.onclick = func
+        self.t = turtle
+
+    def draw(self, turtle):
+        turtle.up()
+        turtle.setpos(self.x, self.y)
+        turtle.fillcolor('gray')
+        turtle.begin_fill()
+        turtle.down()
+        turtle.setheading(0)
+        turtle.fd(self.width)
+        turtle.left(90)
+        turtle.fd(self.height)
+        turtle.left(90)
+        turtle.fd(self.width)
+        turtle.left(90)
+        turtle.fd(self.height)
+        turtle.end_fill()
+
+        turtle.up()
+        turtle.setpos(self.x + (self.width / 2), self.y)
+        turtle.write(self.text, align='center', font=('Arial', self.fontsize, 'normal'))
