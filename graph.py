@@ -77,6 +77,8 @@ class Graph(object):
         return marked
 
     def dijkstra(self, start, finish):
+        """ Returns the shortest path from start to finish as a list of indices.
+        Also sets marked = True on every vertex it looks at."""
 
         def build_path():
             path = []
@@ -127,7 +129,57 @@ class Graph(object):
 
 
     def a_star(self, start, finish):
-        pass
+        """ Literally identical to the dijkstra implementation except this adds
+        the distance to the finishing node when w_cost is calculated."""
+
+        def build_path():
+            path = []
+            node = finish
+            while node != start:
+                path.append(node)
+                node = seen.get(node).prev
+
+            path.append(start)
+            return reversed(path)
+
+        Data = namedtuple('Data', ['cost', 'prev'])
+
+        seen = {start : Data(0, start)}
+        done = set()
+
+        pq = PriorityQueue()
+        pq.put((0, start))
+
+        while not pq.empty():
+            cost, v = pq.get()
+
+            self.vertices[v].marked = True
+
+            # Check if finished
+            if v == finish:
+                return build_path()
+
+            # There may be duplicates in the pq so check if v has been done already
+            if v in done:
+                continue
+
+            # Check every neighbor of v
+            for w in self.vertices[v]:
+                assert w is not None
+                if w not in done:
+
+                    self.vertices[w].marked = True
+
+                    w_cost = seen.get(v).cost + \
+                             self.vertices[v].cost_to(self.vertices[w]) + \
+                             self.vertices[w].cost_to(self.vertices[finish])
+
+                    if w not in seen or seen.get(w).cost > w_cost:
+                        # Add to pq and update seen
+                        seen[w] = Data(w_cost, v)
+                        pq.put((w_cost, w))
+
+            done.add(v)
 
 
 def random_graph(V=50, E=50, connected=False):
@@ -137,11 +189,22 @@ def random_graph(V=50, E=50, connected=False):
         graph.add_edge(randrange(0, V), randrange(0, V))
     if not connected:
         return graph
+
+    #component = max([graph.connected_component(x) for x in range(len(graph.vertices))])
+    #if len(component) < len(graph.vertices):
+    #    disconnected = [x for x in range(len(graph.vertices)) if x not in component]
+    #    for v in disconnected:
+    #        graph.add_edge(v, choice(list(component)))
+
     component = max([graph.connected_component(x) for x in range(len(graph.vertices))])
-    if len(component) < len(graph.vertices):
-        disconnected = [x for x in range(len(graph.vertices)) if x not in component]
-        for v in disconnected:
-            graph.add_edge(v, choice(list(component)))
+    while len(component) < len(graph.vertices):
+        for x in range(len(graph.vertices)):
+            if x not in component:
+                graph.add_edge(x, choice(list(component)))
+                break
+
+        component = max([graph.connected_component(x) for x in range(len(graph.vertices))])
+
     return graph
 
 
