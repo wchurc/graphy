@@ -182,19 +182,13 @@ class Graph(object):
             done.add(v)
 
 
-def random_graph(V=50, E=50, connected=False):
+def random_graph(V=80, E=50, connected=False):
     """ Generates a random graph with V vertices and E edges"""
     graph = Graph(V)
     for _ in range(E):
         graph.add_edge(randrange(0, V), randrange(0, V))
     if not connected:
         return graph
-
-    #component = max([graph.connected_component(x) for x in range(len(graph.vertices))])
-    #if len(component) < len(graph.vertices):
-    #    disconnected = [x for x in range(len(graph.vertices)) if x not in component]
-    #    for v in disconnected:
-    #        graph.add_edge(v, choice(list(component)))
 
     component = max([graph.connected_component(x) for x in range(len(graph.vertices))])
     while len(component) < len(graph.vertices):
@@ -203,7 +197,7 @@ def random_graph(V=50, E=50, connected=False):
                 graph.add_edge(x, choice(list(component)))
                 break
 
-        component = max([graph.connected_component(x) for x in range(len(graph.vertices))])
+        component = graph.connected_component(component.pop())
 
     return graph
 

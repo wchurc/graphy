@@ -125,9 +125,9 @@ class DisplayGraph(object):
         self.selected_queue = deque(maxlen=2)
 
         self.buttons = []
-        self.buttons.append(Button(-300, 300, "a_star", self.draw_a_star))
-        self.buttons.append(Button(-300, 330, "dijkstra", self.draw_dijkstra))
-        self.buttons.append(Button(-300, 360, "new graph", self.new_graph))
+        self.buttons.append(Button(-500, 300, "a_star", self.draw_a_star))
+        self.buttons.append(Button(-500, 330, "dijkstra", self.draw_dijkstra))
+        self.buttons.append(Button(-500, 360, "new graph", self.new_graph))
 
     def populate(self):
 
@@ -270,10 +270,14 @@ class DisplayGraph(object):
 
     def new_graph(self):
         self.selected_queue.clear()
+
+        V = len(self.vertices)
+        E = len(self.edges)
+
         self.vertices = []
         self.edges = []
 
-        self.graph = random_graph(connected=True)
+        self.graph = random_graph(V=V, E=E, connected=True)
 
         self.populate()
         self.display()
