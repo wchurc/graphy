@@ -32,11 +32,11 @@ class Vertex(object):
         self._neighbors.add(v_index)
 
     def distance_to(self, w):
-        """ Returns the from self to Vertex w"""
+        """Returns the from self to Vertex w"""
         return math.sqrt((self.x - w.x)**2 + (self.y - w.y)**2)
 
     def unit_to(self, w):
-        """ Returns the unit vector from self to Vertex w"""
+        """Returns the unit vector from self to Vertex w"""
         x3 = w.x - self.x
         y3 = w.y - self.y
         mag = math.sqrt(x3**2 + y3**2)
@@ -44,6 +44,13 @@ class Vertex(object):
 
     def cost_to(self, w):
         return self.distance_to(w)
+
+    def copy(self):
+        new_vertex = Vertex(self.x, self.y)
+        new_vertex.marked = self.marked
+        new_vertex._neighbors = self._neighbors.copy()
+
+        return new_vertex
 
 
 
@@ -56,13 +63,13 @@ class Graph(object):
         return '\n'.join([str(v) for v in self.vertices])
 
     def add_edge(self, v, w):
-        """ Add edge v-w to the graph"""
+        """Add edge v-w to the graph"""
         if v not in self.vertices[w] and w not in self.vertices[v] and v is not w:
             self.vertices[w].add(v)
             self.vertices[v].add(w)
 
     def connected_component(self, v):
-        """ Returns the set of vertices reachable by v"""
+        """Returns the set of vertices reachable by v"""
         marked = set()
         q = Queue()
         q.put(v)
@@ -75,7 +82,7 @@ class Graph(object):
         return marked
 
     def dijkstra(self, start, finish):
-        """ Returns the shortest path from start to finish as a list of indices.
+        """Returns the shortest path from start to finish as a list of indices.
         Also sets marked = True on every vertex it looks at."""
 
         def build_path():
@@ -127,7 +134,7 @@ class Graph(object):
 
 
     def a_star(self, start, finish):
-        """ Literally identical to the dijkstra implementation except this adds
+        """Literally identical to the dijkstra implementation except this adds
         the distance to the finishing node when w_cost is calculated."""
 
         def build_path():
@@ -179,9 +186,18 @@ class Graph(object):
 
             done.add(v)
 
+    def copy(self):
+
+        new_graph = Graph(V=0)
+
+        for v in self.vertices:
+            new_graph.vertices.append(v.copy())
+
+        return new_graph
+
 
 def random_graph(V=80, E=50, connected=False):
-    """ Generates a random graph with V vertices and E edges"""
+    """Generates a random graph with V vertices and E edges"""
     graph = Graph(V)
     for _ in range(E):
         graph.add_edge(randrange(0, V), randrange(0, V))

@@ -229,7 +229,7 @@ class DisplayGraph(object):
         #self.window.exitonclick()
 
     def get_vertex(self, x, y):
-        """ Returns the index of the first vertex that collides with the coordinates (x,y).
+        """Returns the index of the first vertex that collides with the coordinates (x,y).
         If no collision return None"""
 
         # Create a temporary Vertex for Vertex.distance_to
