@@ -43,8 +43,6 @@ class Vertex(object):
         return (x3/mag, y3/mag)
 
     def cost_to(self, w):
-        result = self.distance_to(w)
-
         return self.distance_to(w)
 
 

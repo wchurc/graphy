@@ -4,6 +4,8 @@ import math
 from graph import Graph, Edge, Vertex, random_graph
 from collections import deque
 
+from fdag import fdag, config
+
 
 class DisplayEdge(object):
 
@@ -32,11 +34,12 @@ class DisplayEdge(object):
 
 class DisplayVertex(object):
 
-    def __init__(self, vertex):
+    def __init__(self, vertex, index):
 
         assert isinstance(vertex, Vertex)
 
         self.v = vertex
+        self.i = index
         self.size = 7
         self._color = 'blue'
         self._marked_color = 'yellow'
@@ -94,18 +97,20 @@ class DisplayVertex(object):
 
 class DisplayGraph(object):
 
-    c1 = 10
-    c2 = 50
-    c3 = 100
-    c4 = 10
+    c1 = 5.0 # Attraction multiplier
+    c2 = 30.0 # Inversely related to attraction
+    c3 = 700.0 # Higher increases repulsion
+    c4 = 7 # Repulsion multiplier
     M = 150
 
-    def __init__(self, graph, window=None):
+    def __init__(self, graph, update_algo=None, window=None):
 
         if not isinstance(graph, Graph):
             raise Exception("DisplayGraph must be initialized with a Graph")
 
         self.graph = graph
+
+        # Layout and display related setup
         self.size = int(math.sqrt(len(graph.vertices)))
 
         self.window = window or turtle.Screen()
@@ -118,26 +123,39 @@ class DisplayGraph(object):
         self.xoffset = -self.window.window_width() // 4
         self.yoffset = -self.window.window_height() // 4
 
+        # Graph setup
         self.vertices = []
         self.edges = []
         self.populate()
 
+        # Initialize queue for selected vertices
         self.selected_queue = deque(maxlen=2)
 
+        # Interface setup
         self.buttons = []
         self.buttons.append(Button(-500, 300, "a_star", self.draw_a_star))
         self.buttons.append(Button(-500, 330, "dijkstra", self.draw_dijkstra))
         self.buttons.append(Button(-500, 360, "new graph", self.new_graph))
+
+        # Pass constants to fdag
+        config(self.c1, self.c2, self.c3, self.c4)
+
+        # Selected update method
+        if update_algo == 'c_update':
+            self.update = self.c_update
+        else:
+            self.update = self.python_update
+
 
     def populate(self):
 
         x, y = 0, 0
 
         # Create DisplayVertices
-        for v in self.graph.vertices:
+        for i, v in enumerate(self.graph.vertices):
             v.x = (x * self.xscale) + self.xoffset
             v.y = (y * self.yscale) + self.yoffset
-            self.vertices.append(DisplayVertex(v))
+            self.vertices.append(DisplayVertex(v, i))
 
             x += 1
             if x >= self.size:
@@ -150,14 +168,26 @@ class DisplayGraph(object):
                 if w > i:
                     self.edges.append(DisplayEdge(self.vertices[i], self.vertices[w]))
 
-    def update(self):
+    def c_update(self):
+        verts = [(float(self.vertices[x].x), float(self.vertices[x].y))
+                 for x in range(len(self.vertices))]
+
+        edges = [(int(self.edges[x].v.i), int(self.edges[x].w.i))
+                 for x in range(len(self.edges))]
+
+        new_vertices = fdag(verts, len(verts), edges, len(edges))
+
+        for i, new_vert in enumerate(new_vertices):
+            self.vertices[i].x, self.vertices[i].y = new_vert
+
+    def python_update(self):
         for v in self.vertices:
             for w in self.vertices:
                 if w is not v:
                     d = v.distance_to(w)
                     f = self.repulsion(d) * DisplayGraph.c4
                     x, y = [f*x for x in w.unit_to(v)]
-                    delta = math.sqrt(x**2 + y**2)
+                    #delta = math.sqrt(x**2 + y**2)
                     v.x += x
                     v.y += y
 
@@ -288,8 +318,8 @@ class DisplayGraph(object):
 
     @classmethod
     def repulsion(cls, d):
-        denom = d if d > cls.c2 else cls.c2
-        return cls.c3/denom**2
+        #denom = d if d > cls.c2 else cls.c2
+        return cls.c3/d**2
 
 
 class Button(object):
