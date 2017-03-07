@@ -10,6 +10,7 @@ if __name__ == '__main__':
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-c", "--c-single-threaded", action="store_true")
+    group.add_argument("-ct", "--c-multi-threaded", action="store_true")
     group.add_argument("-p", "--python", action="store_true")
 
     parser.add_argument("-v", "--vertices", type=int, help="Number of vertices in graph")
@@ -33,8 +34,10 @@ if __name__ == '__main__':
     g = random_graph(**graph_args)
 
     dgraph_args = {}
-    if args.c_single_threaded:
+    if args.c_single_threaded or args.c_multi_threaded:
         dgraph_args['update_algo'] = 'c_update'
+        if args.c_multi_threaded:
+            dgraph_args['threaded'] = True
     elif args.python:
         dgraph_args['update_algo'] = 'python_update'
 

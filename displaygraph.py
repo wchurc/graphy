@@ -103,7 +103,7 @@ class DisplayGraph(object):
     c4 = 7 # Repulsion multiplier
     M = 150
 
-    def __init__(self, graph, update_algo=None, window=None):
+    def __init__(self, graph, threaded=False, update_algo=None, window=None):
 
         if not isinstance(graph, Graph):
             raise Exception("DisplayGraph must be initialized with a Graph")
@@ -138,7 +138,8 @@ class DisplayGraph(object):
         self.buttons.append(Button(-500, 360, "new graph", self.new_graph))
 
         # Pass constants to fdag
-        config(self.c1, self.c2, self.c3, self.c4)
+        self.threaded = threaded
+        config(self.c1, self.c2, self.c3, self.c4, self.threaded)
 
         # Selected update method
         if update_algo == 'c_update':
