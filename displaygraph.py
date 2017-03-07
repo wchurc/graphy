@@ -109,7 +109,7 @@ class DisplayGraph(object):
     c4 = 7      # Repulsion multiplier
     M = 150     # Number of iterations
 
-    def __init__(self, graph, threaded=False, update_algo=None, window=None):
+    def __init__(self, graph, threaded=False, num_threads=4, update_algo=None, window=None):
 
         if not isinstance(graph, Graph):
             raise Exception("DisplayGraph must be initialized with a Graph")
@@ -144,11 +144,12 @@ class DisplayGraph(object):
         self.buttons.append(Button(-500, 360, "new graph", self.new_graph))
 
         self.threaded = threaded
+        self.num_threads = num_threads
 
         # Selected update method
         if update_algo == 'c_update' and fdag_imported is True:
             self.update = self.c_update
-            config(self.c1, self.c2, self.c3, self.c4, self.threaded)
+            config(self.c1, self.c2, self.c3, self.c4, self.threaded, self.num_threads)
         else:
             self.update = self.python_update
 

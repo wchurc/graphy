@@ -16,6 +16,7 @@ if __name__ == '__main__':
     parser.add_argument("-v", "--vertices", type=int, help="Number of vertices in graph")
     parser.add_argument("-e", "--edges", type=int, help="Number of edges in graph")
     parser.add_argument("-nc", "--not-connected", action="store_true", help="Don't automatically connect all components")
+    parser.add_argument("-nt", "--num-threads", type=int, help="Number of threads to use during layout if using C-extension")
 
 
     args = parser.parse_args()
@@ -38,6 +39,8 @@ if __name__ == '__main__':
         dgraph_args['update_algo'] = 'c_update'
         if args.c_multi_threaded:
             dgraph_args['threaded'] = True
+            if args.num_threads:
+                dgraph_args['num_threads'] = args.num_threads
     elif args.python:
         dgraph_args['update_algo'] = 'python_update'
 

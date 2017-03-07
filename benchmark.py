@@ -17,10 +17,10 @@ else:
 
 class BenchmarkDisplayGraph(DisplayGraph):
     """Subclass of DisplayGraph for benchmarking. Doesn't create a window
-    to display output and copies the graph it is initialized with, but 
+    to display output and copies the graph it is initialized with, but
     otherwise is identical."""
 
-    def __init__(self, graph, threaded=False, update_algo=None):
+    def __init__(self, graph, threaded=False, num_threads=4, update_algo=None):
 
         if not isinstance(graph, Graph):
             raise Exception("DisplayGraph must be initialized with a Graph")
@@ -44,11 +44,12 @@ class BenchmarkDisplayGraph(DisplayGraph):
         self.selected_queue = deque(maxlen=2)
 
         self.threaded = threaded
+        self.num_threads = num_threads
 
         # Selected update method
         if update_algo == 'c_update' and fdag_imported is True:
             self.update = self.c_update
-            config(self.c1, self.c2, self.c3, self.c4, self.threaded)
+            config(self.c1, self.c2, self.c3, self.c4, self.threaded, self.num_threads)
         else:
             self.update = self.python_update
 
@@ -85,10 +86,19 @@ if __name__ == '__main__':
         print("Python results: {}".format(p_results))
 
     if fdag_imported:
+
+        # Single Threaded
         c_results = timeit('bmg.run_benchmark()', setup="from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, threaded=False, update_algo='c_update')", number=10)
 
         print("C results(single thread): {}".format(c_results))
 
-        c_results = timeit('bmg.run_benchmark()', setup="from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, threaded=True, update_algo='c_update')", number=10)
+        # Threaded
+        num_threads = 1
+        setup_str = "from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, threaded=True, num_threads={}, update_algo='c_update')"
 
-        print("C results(multi-threaded): {}".format(c_results))
+        for x in range(5):
+            num_threads = num_threads * 2
+
+            c_results = timeit('bmg.run_benchmark()', setup=setup_str.format(num_threads), number=10)
+
+            print("C results(multi-threaded ({0} threads): {1}".format(num_threads, c_results))
