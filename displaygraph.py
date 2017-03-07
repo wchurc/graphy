@@ -4,7 +4,13 @@ import math
 from graph import Graph, Edge, Vertex, random_graph
 from collections import deque
 
-from fdag import fdag, config
+try:
+    from fdag import fdag, config
+except ImportError:
+    fdag_imported = False
+    print("Failed to import fdag. C-extensions are disabled")
+else:
+    fdag_imported = True
 
 
 class DisplayEdge(object):
@@ -97,11 +103,11 @@ class DisplayVertex(object):
 
 class DisplayGraph(object):
 
-    c1 = 5.0 # Attraction multiplier
-    c2 = 30.0 # Inversely related to attraction
-    c3 = 700.0 # Higher increases repulsion
-    c4 = 7 # Repulsion multiplier
-    M = 150
+    c1 = 5.0    # Attraction multiplier
+    c2 = 30.0   # Inversely related to attraction
+    c3 = 700.0  # Higher increases repulsion
+    c4 = 7      # Repulsion multiplier
+    M = 150     # Number of iterations
 
     def __init__(self, graph, threaded=False, update_algo=None, window=None):
 
@@ -137,13 +143,12 @@ class DisplayGraph(object):
         self.buttons.append(Button(-500, 330, "dijkstra", self.draw_dijkstra))
         self.buttons.append(Button(-500, 360, "new graph", self.new_graph))
 
-        # Pass constants to fdag
         self.threaded = threaded
-        config(self.c1, self.c2, self.c3, self.c4, self.threaded)
 
         # Selected update method
-        if update_algo == 'c_update':
+        if update_algo == 'c_update' and fdag_imported is True:
             self.update = self.c_update
+            config(self.c1, self.c2, self.c3, self.c4, self.threaded)
         else:
             self.update = self.python_update
 
@@ -319,8 +324,8 @@ class DisplayGraph(object):
 
     @classmethod
     def repulsion(cls, d):
-        #denom = d if d > cls.c2 else cls.c2
-        return cls.c3/d**2
+        denom = d if d > cls.c2 else cls.c2
+        return cls.c3/denom**2
 
 
 class Button(object):

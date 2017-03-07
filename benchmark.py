@@ -4,7 +4,15 @@ from collections import deque
 import math
 
 from graph import random_graph, Graph
-from displaygraph import DisplayGraph, config
+from displaygraph import DisplayGraph
+
+try:
+    from displaygraph import config
+except ImportError:
+    print("Couldn't find fdag... skipping C-extension benchmarks.")
+    fdag_imported = False
+else:
+    fdag_imported = True
 
 
 class BenchmarkDisplayGraph(DisplayGraph):
@@ -35,13 +43,12 @@ class BenchmarkDisplayGraph(DisplayGraph):
         # Initialize queue for selected vertices
         self.selected_queue = deque(maxlen=2)
 
-        # Pass constants to fdag
         self.threaded = threaded
-        config(self.c1, self.c2, self.c3, self.c4, self.threaded)
 
         # Selected update method
-        if update_algo == 'c_update':
+        if update_algo == 'c_update' and fdag_imported is True:
             self.update = self.c_update
+            config(self.c1, self.c2, self.c3, self.c4, self.threaded)
         else:
             self.update = self.python_update
 
@@ -77,10 +84,11 @@ if __name__ == '__main__':
 
         print("Python results: {}".format(p_results))
 
-    c_results = timeit('bmg.run_benchmark()', setup="from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, threaded=False, update_algo='c_update')", number=10)
+    if fdag_imported:
+        c_results = timeit('bmg.run_benchmark()', setup="from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, threaded=False, update_algo='c_update')", number=10)
 
-    print("C results(single thread): {}".format(c_results))
+        print("C results(single thread): {}".format(c_results))
 
-    c_results = timeit('bmg.run_benchmark()', setup="from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, threaded=True, update_algo='c_update')", number=10)
+        c_results = timeit('bmg.run_benchmark()', setup="from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, threaded=True, update_algo='c_update')", number=10)
 
-    print("C results(multi-threaded): {}".format(c_results))
+        print("C results(multi-threaded): {}".format(c_results))
