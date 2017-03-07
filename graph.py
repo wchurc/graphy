@@ -88,11 +88,17 @@ class Graph(object):
         def build_path():
             path = []
             node = finish
+            total_cost = 0
+
             while node != start:
                 path.append(node)
-                node = seen.get(node).prev
+                next_node = seen.get(node).prev
+                total_cost += self.vertices[node].cost_to(self.vertices[next_node])
+                node = next_node
 
             path.append(start)
+
+            print("{0:10} -> path cost: {1:10}".format("Dijkstra", total_cost))
             return reversed(path)
 
         Data = namedtuple('Data', ['cost', 'prev'])
@@ -140,11 +146,17 @@ class Graph(object):
         def build_path():
             path = []
             node = finish
+            total_cost = 0
+
             while node != start:
                 path.append(node)
-                node = seen.get(node).prev
+                next_node = seen.get(node).prev
+                total_cost += self.vertices[node].cost_to(self.vertices[next_node])
+                node = next_node
 
             path.append(start)
+
+            print("{0:10} -> path cost: {1}".format("A*", total_cost))
             return reversed(path)
 
         Data = namedtuple('Data', ['cost', 'prev'])
