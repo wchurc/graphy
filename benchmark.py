@@ -1,3 +1,4 @@
+import argparse
 from timeit import timeit
 from collections import deque
 import math
@@ -11,7 +12,7 @@ class BenchmarkDisplayGraph(DisplayGraph):
     to display output and copies the graph it is initialized with, but 
     otherwise is identical."""
 
-    def __init__(self, graph, update_algo=None):
+    def __init__(self, graph, threaded=False, update_algo=None):
 
         if not isinstance(graph, Graph):
             raise Exception("DisplayGraph must be initialized with a Graph")
@@ -35,7 +36,8 @@ class BenchmarkDisplayGraph(DisplayGraph):
         self.selected_queue = deque(maxlen=2)
 
         # Pass constants to fdag
-        config(self.c1, self.c2, self.c3, self.c4)
+        self.threaded = threaded
+        config(self.c1, self.c2, self.c3, self.c4, self.threaded)
 
         # Selected update method
         if update_algo == 'c_update':
@@ -49,13 +51,36 @@ class BenchmarkDisplayGraph(DisplayGraph):
 
 
 if __name__ == '__main__':
-    graph = random_graph()
 
-    p_results = timeit('bmg.run_benchmark()', setup="from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, update_algo='python_update')", number=10)
+    parser = argparse.ArgumentParser(description="Benchmarks!")
 
-    print("Python results: {}".format(p_results))
+    parser.add_argument("-np", "--no-python", action="store_true",
+                        help="Don't run python benchmark")
+    parser.add_argument("-v", "--vertices", type=int, help="Number of vertices in graph")
+    parser.add_argument("-e", "--edges", type=int, help="Number of edges in graph")
 
-    c_results = timeit('bmg.run_benchmark()', setup="from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, update_algo='c_update')", number=10)
+    args = parser.parse_args()
 
-    print("C results: {}".format(c_results))
+    graph_args = {}
 
+    if args.vertices:
+        graph_args['V'] = args.vertices
+    if args.edges:
+        graph_args['E'] = args.edges
+
+    print("Starting benchmarks. This will take a minute...")
+
+    graph = random_graph(**graph_args)
+
+    if args.no_python is False:
+        p_results = timeit('bmg.run_benchmark()', setup="from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, update_algo='python_update')", number=10)
+
+        print("Python results: {}".format(p_results))
+
+    c_results = timeit('bmg.run_benchmark()', setup="from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, threaded=False, update_algo='c_update')", number=10)
+
+    print("C results(single thread): {}".format(c_results))
+
+    c_results = timeit('bmg.run_benchmark()', setup="from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, threaded=True, update_algo='c_update')", number=10)
+
+    print("C results(multi-threaded): {}".format(c_results))
