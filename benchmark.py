@@ -1,7 +1,9 @@
 import argparse
 from timeit import timeit
-from collections import deque
+from collections import deque, defaultdict
 import math
+
+from matplotlib import pyplot as plt
 
 from graph import random_graph, Graph
 from displaygraph import DisplayGraph
@@ -58,14 +60,56 @@ class BenchmarkDisplayGraph(DisplayGraph):
             self.update()
 
 
-if __name__ == '__main__':
+def time_it(update_algo, threaded=False, num_threads=0, number=10):
+    setup_str = "from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, update_algo='{update_algo}', threaded={threaded}, num_threads={num_threads})"
+    return timeit('bmg.run_benchmark()',
+                  setup=setup_str.format(update_algo=update_algo, num_threads=num_threads, threaded=threaded),
+                  number=number)
 
+
+def benchmark(graph, number=10):
+    print("Starting benchmarks. This will take a minute...")
+
+    results = []
+
+    if args.no_python is False:
+        p_results = time_it('python_update', number=number)
+        results.append(('python', p_results))
+
+        print("Python results: {}".format(p_results))
+
+    if fdag_imported:
+
+        # Single Threaded
+        c_results = time_it('c_update', number=number, threaded=False)
+        results.append(('C 01 thread', c_results))
+
+        print("C results(single thread): {}".format(c_results))
+
+        # Threaded
+        num_threads = 1
+
+        for x in range(5):
+            num_threads = num_threads * 2
+
+            c_results = time_it('c_update', number=number, num_threads=num_threads, threaded=True)
+            results.append(('C {0:02d} threads'.format(num_threads), c_results))
+
+            print("C results(multi-threaded ({0} threads): {1}".format(num_threads, c_results))
+
+    return results
+
+
+def parse_args():
     parser = argparse.ArgumentParser(description="Benchmarks!")
 
     parser.add_argument("-np", "--no-python", action="store_true",
                         help="Don't run python benchmark")
     parser.add_argument("-v", "--vertices", type=int, help="Number of vertices in graph")
     parser.add_argument("-e", "--edges", type=int, help="Number of edges in graph")
+    parser.add_argument("-pl", "--plot", action="store_true", help="Plot results")
+    parser.add_argument("-s", "--series", action="store_true", help="Run a series of benchmarks on different sized graphs")
+    parser.add_argument("-n", "--number", type=int, help="Number of times to run benchmark (passed to timeit.timeit)")
 
     args = parser.parse_args()
 
@@ -76,29 +120,44 @@ if __name__ == '__main__':
     if args.edges:
         graph_args['E'] = args.edges
 
-    print("Starting benchmarks. This will take a minute...")
+    return (args, graph_args)
 
-    graph = random_graph(**graph_args)
 
-    if args.no_python is False:
-        p_results = timeit('bmg.run_benchmark()', setup="from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, update_algo='python_update')", number=10)
+def plot_results(x_axis, results):
+    plt.ylabel('time')
+    plt.xlabel('# of vertices')
 
-        print("Python results: {}".format(p_results))
+    for key, value in sorted(results.items()):
+        plt.plot(x_axis, value, label=key)
 
-    if fdag_imported:
+    plt.legend()
+    plt.show()
 
-        # Single Threaded
-        c_results = timeit('bmg.run_benchmark()', setup="from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, threaded=False, update_algo='c_update')", number=10)
 
-        print("C results(single thread): {}".format(c_results))
+if __name__ == '__main__':
 
-        # Threaded
-        num_threads = 1
-        setup_str = "from __main__ import graph, BenchmarkDisplayGraph; bmg = BenchmarkDisplayGraph(graph, threaded=True, num_threads={}, update_algo='c_update')"
+    args, graph_args = parse_args()
 
-        for x in range(5):
-            num_threads = num_threads * 2
+    results = defaultdict(list)
 
-            c_results = timeit('bmg.run_benchmark()', setup=setup_str.format(num_threads), number=10)
+    number = args.number if args.number else 10
 
-            print("C results(multi-threaded ({0} threads): {1}".format(num_threads, c_results))
+    if args.series:
+        x_axis = []
+        for x in range(1, 9):
+            V = x * 50
+            x_axis.append(V)
+
+            graph_args['V'] = V
+
+            graph = random_graph(**graph_args)
+            for algo, time in benchmark(graph, number=number):
+                results[algo].append(time)
+
+        if args.plot:
+            plot_results(x_axis, results)
+
+    else:
+        graph = random_graph(**graph_args)
+        for algo, time in benchmark(graph, number=number):
+            results[algo].append(time)
