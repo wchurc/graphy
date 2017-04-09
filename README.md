@@ -18,7 +18,10 @@ You can use command-line arguments to create a graph of a specific size
 ```
 $ python3 test.py --vertices 100 --edges 75
 ```
-Try ```$ python3 test.py --help``` for other options
+Or to see other options enter
+```
+$ python3 test.py --help
+```
 
 Requirements
 ============
@@ -26,7 +29,7 @@ Requirements
 
 Optional
 ------------
-If you want to try using the C extension the speed up the graph layout process
+If you want to try using the C extension the speed up the graph layout process you will need:
 - Linux (Only tested on Ubuntu 16.10)
 - python3-dev
 
@@ -47,10 +50,25 @@ With the C extension
 
     ```$ python3 setup.py install```
 
-    otherwise build it locally with
+    otherwise build it locally and move the .so file to the project's root directory.
 
-    ```$ python3 setup.py build```
+    ```
+    $ cd fdag
+    $ python3 setup.py build
+    $ cd ..
+    $ mv fdag/build/lib.linux-x86_64-3.5/fdag.cpython-35m-x86_64-linux-gnu.so .
+    ```
 
 Bonus: Benchmarks
 ============
-[pic]
+Plots are a requirement after spending the time to write a C extension.
+
+The time values on the y axis are the amount of time required to run the graph layout algorithm N times. The values on the time axis on these two plots are not comparable because I was too impatient to run the Python benchmarks for the same N.
+
+<img src="resources/python_vs_c.png" width=512 height=400></img>
+
+Looks like it was worth it.
+
+<img src="resources/threading_benchmarks.png" width=512 height=400></img>
+
+I'm running this on a 4-core i7 (8 cores if you count hyperthreading) and the sweet spot seems to be between 4 and 8 threads.
