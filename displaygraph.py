@@ -1,5 +1,5 @@
-import time
-import turtle
+from turtle_viewer import TurtleViewer
+
 import math
 from graph import Graph, Edge, Vertex, random_graph
 from collections import deque
@@ -15,21 +15,18 @@ else:
 
 class DisplayEdge(object):
 
-    def __init__(self, v, w):
+    def __init__(self, v, w, view):
 
         assert isinstance(v, DisplayVertex) and isinstance(w, DisplayVertex)
 
         self.v = v
         self.w = w
+        self.view = view
         self.size = 2
 
-    def draw(self, t):
-        t.color(self.color)
-        t.pensize(self.size)
-        t.up()
-        t.setpos(self.v.x, self.v.y)
-        t.down()
-        t.setpos(self.w.x, self.w.y)
+    def draw(self):
+        self.view.line(self.v.x, self.v.y, self.w.x, self.w.y,
+                  color=self.color, stroke=self.size)
 
     @property
     def color(self):
@@ -40,12 +37,13 @@ class DisplayEdge(object):
 
 class DisplayVertex(object):
 
-    def __init__(self, vertex, index):
+    def __init__(self, vertex, index, view):
 
         assert isinstance(vertex, Vertex)
 
         self.v = vertex
         self.i = index
+        self.view = view
         self.size = 7
         self._color = 'blue'
         self._marked_color = 'yellow'
@@ -53,22 +51,10 @@ class DisplayVertex(object):
         self.highlighted = False
         self.selected = False
 
-    def draw(self, t):
-        t.up()
-        t.setpos(self.v.x + self.size, self.v.y)
-        t.setheading(90)
-        t.down()
-        t.fillcolor(self.color)
-        t.pensize(2)
-        if self.selected:
-            t.pencolor('orange')
-        else:
-            t.pencolor('black')
-        t.begin_fill()
-        t.circle(self.size)
-        t.end_fill()
-        #t.dot(self.size, self.color)
-
+    def draw(self):
+        stroke_color = 'orange' if self.selected else'black'
+        self.view.circle(self.x, self.y, self.size, color=self.color,
+                    stroke_color=stroke_color)
 
     @property
     def x(self):
@@ -119,15 +105,12 @@ class DisplayGraph(object):
         # Layout and display related setup
         self.size = int(math.sqrt(len(graph.vertices)))
 
-        self.window = window or turtle.Screen()
-        self.window.tracer(0, 0)
-        self.t = turtle.Turtle(visible=False)
-        self.t.speed(0)
+        self.view = TurtleViewer(on_click=self.handle_click)
 
-        self.xscale = (self.window.window_width() // 2) // self.size
-        self.yscale = (self.window.window_height() // 2) // self.size
-        self.xoffset = -self.window.window_width() // 4
-        self.yoffset = -self.window.window_height() // 4
+        self.xscale = (self.view.width // 2) // self.size
+        self.yscale = (self.view.height // 2) // self.size
+        self.xoffset = -self.view.width // 4
+        self.yoffset = -self.view.height // 4
 
         # Graph setup
         self.vertices = []
@@ -138,10 +121,9 @@ class DisplayGraph(object):
         self.selected_queue = deque(maxlen=2)
 
         # Interface setup
-        self.buttons = []
-        self.buttons.append(Button(-500, 300, "a_star", self.draw_a_star))
-        self.buttons.append(Button(-500, 330, "dijkstra", self.draw_dijkstra))
-        self.buttons.append(Button(-500, 360, "new graph", self.new_graph))
+        self.view.add_button(self.view.Button(-500, 300, "a_star", self.draw_a_star))
+        self.view.add_button(self.view.Button(-500, 330, "dijkstra", self.draw_dijkstra))
+        self.view.add_button(self.view.Button(-500, 360, "new graph", self.new_graph))
 
         self.threaded = threaded
         self.num_threads = num_threads
@@ -162,7 +144,7 @@ class DisplayGraph(object):
         for i, v in enumerate(self.graph.vertices):
             v.x = (x * self.xscale) + self.xoffset
             v.y = (y * self.yscale) + self.yoffset
-            self.vertices.append(DisplayVertex(v, i))
+            self.vertices.append(DisplayVertex(v, i, self.view))
 
             x += 1
             if x >= self.size:
@@ -173,7 +155,7 @@ class DisplayGraph(object):
         for i, v in enumerate(self.graph.vertices):
             for w in v:
                 if w > i:
-                    self.edges.append(DisplayEdge(self.vertices[i], self.vertices[w]))
+                    self.edges.append(DisplayEdge(self.vertices[i], self.vertices[w], self.view))
 
     def c_update(self):
         verts = [(float(self.vertices[x].x), float(self.vertices[x].y))
@@ -210,30 +192,31 @@ class DisplayGraph(object):
 
     def draw(self, buttons=True):
 
-        if buttons:
-            for b in self.buttons:
-                b.draw(self.t)
+        self.view.clear()
 
         for e in self.edges:
-            e.draw(self.t)
+            e.draw()
 
         for v in self.vertices:
-            v.draw(self.t)
+            v.draw()
 
-        self.window.update()
+        self.view.update(draw_buttons=buttons)
 
     def display(self):
 
         for x in range(DisplayGraph.M):
             self.update()
-            self.t.clear()
             self.draw(buttons=False)
 
         self.draw()
 
-        self.window.onclick(self.handle_click)
-        self.t.getscreen()._root.mainloop()
-        #self.window.exitonclick()
+        # Run the mainloop to prevent window from closing
+        self.view.run()
+
+    def handle_click(self, x, y):
+        vertex_index = self.get_vertex(x, y)
+        if vertex_index is not None:
+            self.select_vertex(vertex_index)
 
     def get_vertex(self, x, y):
         """Returns the index of the first vertex that collides with the coordinates (x,y).
@@ -256,15 +239,7 @@ class DisplayGraph(object):
 
         self.selected_queue.append(i)
 
-        self.t.clear()
         self.draw()
-
-    def handle_click(self, x, y):
-        self.button_dispatch(x, y)
-
-        vertex_index = self.get_vertex(x, y)
-        if vertex_index is not None:
-            self.select_vertex(vertex_index)
 
     def draw_dijkstra(self):
         for v in self.vertices:
@@ -278,9 +253,8 @@ class DisplayGraph(object):
 
             for i in path:
                 self.vertices[i].highlighted = True
-                self.vertices[i].draw(self.t)
+                self.vertices[i].draw()
 
-            self.t.clear()
             self.draw()
 
     def draw_a_star(self):
@@ -295,15 +269,9 @@ class DisplayGraph(object):
 
             for i in path:
                 self.vertices[i].highlighted = True
-                self.vertices[i].draw(self.t)
+                self.vertices[i].draw()
 
-            self.t.clear()
             self.draw()
-
-    def button_dispatch(self, x, y):
-        for button in self.buttons:
-            if x >= button.x and x <= (button.y + button.width) and y >= button.y and y <= (button.y + button.height):
-                button.onclick()
 
     def new_graph(self):
         self.selected_queue.clear()
@@ -329,34 +297,3 @@ class DisplayGraph(object):
         return cls.c3/denom**2
 
 
-class Button(object):
-
-    def __init__(self, x, y, text, func):
-        self.x = x
-        self.y = y
-        self.text = text
-        self.fontsize = 12
-        self.height = 16
-        self.width = 12 * len(self.text)
-        self.onclick = func
-        self.t = turtle
-
-    def draw(self, turtle):
-        turtle.up()
-        turtle.setpos(self.x, self.y)
-        turtle.fillcolor('gray')
-        turtle.begin_fill()
-        turtle.down()
-        turtle.setheading(0)
-        turtle.fd(self.width)
-        turtle.left(90)
-        turtle.fd(self.height)
-        turtle.left(90)
-        turtle.fd(self.width)
-        turtle.left(90)
-        turtle.fd(self.height)
-        turtle.end_fill()
-
-        turtle.up()
-        turtle.setpos(self.x + (self.width / 2), self.y)
-        turtle.write(self.text, align='center', font=('Arial', self.fontsize, 'normal'))
