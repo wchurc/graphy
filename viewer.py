@@ -2,6 +2,13 @@ from abc import ABCMeta, abstractmethod
 
 
 class Viewer(object, metaclass=ABCMeta):
+    def __init__(self, width, height, on_click=None):
+        self.width = width
+        self.height = height
+        self._on_click = on_click
+
+        self._buttons = []
+
     @abstractmethod
     def circle():
         pass

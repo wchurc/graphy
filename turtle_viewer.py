@@ -5,18 +5,15 @@ from viewer import Viewer
 
 
 class TurtleViewer(Viewer):
-    def __init__(self, width, height, on_click=None):
+    def __init__(self, *args, **kwargs):
+        super(TurtleViewer, self).__init__(*args, **kwargs)
+
         self.window = turtle.Screen()
-        self.window.setup(width=width, height=height)
+        self.window.setup(width=self.width, height=self.height)
         self.window.tracer(0, 0)
         self.t = turtle.Turtle(visible=False)
         self.t.speed(0)
-        self._buttons = []
 
-        self.width = width
-        self.height = height
-
-        self._on_click = on_click
         # Tell turtle how to handle clicks
         self.window.onclick(self._handle_click)
 
@@ -39,7 +36,6 @@ class TurtleViewer(Viewer):
         self.t.begin_fill()
         self.t.circle(radius)
         self.t.end_fill()
-        #t.dot(self.size, self.color)
 
     def line(self, x1, y1, x2, y2, **config):
         color = config.get('color') or self.stroke_col
