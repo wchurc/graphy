@@ -95,7 +95,8 @@ class DisplayGraph(object):
     c4 = 7      # Repulsion multiplier
     M = 150     # Number of iterations
 
-    def __init__(self, graph, threaded=False, num_threads=4, update_algo=None, window=None):
+    def __init__(self, graph, width=1000, height=1000,
+                 threaded=False, num_threads=4, update_algo=None):
 
         if not isinstance(graph, Graph):
             raise Exception("DisplayGraph must be initialized with a Graph")
@@ -105,12 +106,12 @@ class DisplayGraph(object):
         # Layout and display related setup
         self.size = int(math.sqrt(len(graph.vertices)))
 
-        self.view = TurtleViewer(on_click=self.handle_click)
+        self.view = TurtleViewer(width=width, height=height, on_click=self.handle_click)
 
-        self.xscale = (self.view.width // 2) // self.size
-        self.yscale = (self.view.height // 2) // self.size
-        self.xoffset = -self.view.width // 4
-        self.yoffset = -self.view.height // 4
+        self.xscale = (width // 2) // self.size
+        self.yscale = (height // 2) // self.size
+        self.xoffset = -width // 4
+        self.yoffset = -height // 4
 
         # Graph setup
         self.vertices = []
@@ -121,9 +122,11 @@ class DisplayGraph(object):
         self.selected_queue = deque(maxlen=2)
 
         # Interface setup
-        self.view.add_button(self.view.Button(-500, 300, "a_star", self.draw_a_star))
-        self.view.add_button(self.view.Button(-500, 330, "dijkstra", self.draw_dijkstra))
-        self.view.add_button(self.view.Button(-500, 360, "new graph", self.new_graph))
+        btn_x = -width//2 + 20
+        btn_y = height//2 - 34
+        self.view.add_button(self.view.Button(btn_x, btn_y - 60, "a_star", self.draw_a_star))
+        self.view.add_button(self.view.Button(btn_x, btn_y - 30, "dijkstra", self.draw_dijkstra))
+        self.view.add_button(self.view.Button(btn_x, btn_y, "new graph", self.new_graph))
 
         self.threaded = threaded
         self.num_threads = num_threads

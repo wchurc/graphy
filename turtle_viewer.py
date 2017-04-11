@@ -5,15 +5,16 @@ from viewer import Viewer
 
 
 class TurtleViewer(Viewer):
-    def __init__(self, on_click=None):
+    def __init__(self, width, height, on_click=None):
         self.window = turtle.Screen()
+        self.window.setup(width=width, height=height)
         self.window.tracer(0, 0)
         self.t = turtle.Turtle(visible=False)
         self.t.speed(0)
         self._buttons = []
 
-        self.width = self.window.window_width()
-        self.height = self.window.window_height()
+        self.width = width
+        self.height = height
 
         self._on_click = on_click
         # Tell turtle how to handle clicks
