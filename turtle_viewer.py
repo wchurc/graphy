@@ -1,3 +1,4 @@
+from functools import partial
 import turtle
 
 from viewer import Viewer
@@ -57,7 +58,7 @@ class TurtleViewer(Viewer):
     def update(self, draw_buttons=True):
         if draw_buttons:
             for button in self._buttons:
-                button.draw(self.t)
+                button.draw()
         self.window.update()
 
     def run(self):
@@ -65,45 +66,30 @@ class TurtleViewer(Viewer):
 
     def add_button(self, button):
         button.t = self.t
+        button.draw = partial(self.draw_button, button, self.t)
         self._buttons.append(button)
 
-    class Button(object):
+    @staticmethod
+    def draw_button(btn, turtle):
+        btn.t.up()
+        btn.t.setpos(btn.x, btn.y)
+        btn.t.fillcolor('gray')
+        btn.t.begin_fill()
+        btn.t.down()
+        btn.t.setheading(0)
+        btn.t.fd(btn.width)
+        btn.t.left(90)
+        btn.t.fd(btn.height)
+        btn.t.left(90)
+        btn.t.fd(btn.width)
+        btn.t.left(90)
+        btn.t.fd(btn.height)
+        btn.t.end_fill()
 
-        def __init__(self, x, y, text, func):
-            self.x = x
-            self.y = y
-            self.text = text
-            self.fontsize = 12
-            self.height = 16
-            self.width = 12 * len(self.text)
-            self.onclick = func
-            self.t = None
+        btn.t.up()
+        btn.t.setpos(btn.x + (btn.width / 2), btn.y)
+        btn.t.write(btn.text, align='center', font=('Arial', btn.fontsize, 'normal'))
 
-        def draw(self, turtle):
-            self.t.up()
-            self.t.setpos(self.x, self.y)
-            self.t.fillcolor('gray')
-            self.t.begin_fill()
-            self.t.down()
-            self.t.setheading(0)
-            self.t.fd(self.width)
-            self.t.left(90)
-            self.t.fd(self.height)
-            self.t.left(90)
-            self.t.fd(self.width)
-            self.t.left(90)
-            self.t.fd(self.height)
-            self.t.end_fill()
-
-            self.t.up()
-            self.t.setpos(self.x + (self.width / 2), self.y)
-            self.t.write(self.text, align='center', font=('Arial', self.fontsize, 'normal'))
-
-    def button_dispatch(self, x, y):
-        for button in self._buttons:
-            if x >= button.x and x <= (button.y + button.width) and \
-               y >= button.y and y <= (button.y + button.height):
-                button.onclick()
 
     def _handle_click(self, x, y):
         self.button_dispatch(x, y)
@@ -111,4 +97,3 @@ class TurtleViewer(Viewer):
         # Pass click coordinates to client code
         if self._on_click:
             self._on_click(x, y)
-
