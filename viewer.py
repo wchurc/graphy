@@ -1,8 +1,9 @@
 from abc import ABCMeta, abstractmethod
+from functools import partial
 
 
 class Viewer(object, metaclass=ABCMeta):
-    def __init__(self, width, height, on_click=None):
+    def __init__(self, width=1000, height=1000, on_click=None):
         self.width = width
         self.height = height
         self._on_click = on_click
