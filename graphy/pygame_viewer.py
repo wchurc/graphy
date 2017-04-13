@@ -94,7 +94,6 @@ class PygameViewer(Viewer):
                     x, y = self._translate_back(event.pos[0], event.pos[1])
                     self.button_dispatch(x, y)
 
-                    # TODO -> calling self._on_click here creates recursive call to self.run
                     self._on_click(x, y)
 
             if event.type == QUIT:

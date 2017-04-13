@@ -201,7 +201,7 @@ class DisplayGraph(object):
 
         self.view.update(draw_buttons=buttons)
 
-    def display(self):
+    def display(self, run=True):
 
         for x in range(DisplayGraph.M):
             self.update()
@@ -210,7 +210,8 @@ class DisplayGraph(object):
         self.draw()
 
         # Run the mainloop to prevent window from closing
-        self.view.run()
+        if run:
+            self.view.run()
 
     def handle_click(self, x, y):
         vertex_index = self.get_vertex(x, y)
@@ -240,7 +241,16 @@ class DisplayGraph(object):
 
         self.draw()
 
+    def display_path(self, path):
+        # Highlight path vertices
+        for i in path:
+            self.vertices[i].highlighted = True
+            self.vertices[i].draw()
+
+        self.draw()
+
     def draw_dijkstra(self):
+        # Clear any previous highlighted vertices
         for v in self.vertices:
             v.v.marked = False
             v.highlighted = False
@@ -250,13 +260,10 @@ class DisplayGraph(object):
             a, b = iter(self.selected_queue)
             path = self.graph.dijkstra(a, b)
 
-            for i in path:
-                self.vertices[i].highlighted = True
-                self.vertices[i].draw()
-
-            self.draw()
+            self.display_path(path)
 
     def draw_a_star(self):
+        # Clear any previous highlighted vertices
         for v in self.vertices:
             v.v.marked = False
             v.highlighted = False
@@ -266,11 +273,7 @@ class DisplayGraph(object):
             a, b = iter(self.selected_queue)
             path = self.graph.a_star(a, b)
 
-            for i in path:
-                self.vertices[i].highlighted = True
-                self.vertices[i].draw()
-
-            self.draw()
+            self.display_path(path)
 
     def new_graph(self):
         self.selected_queue.clear()
@@ -281,10 +284,11 @@ class DisplayGraph(object):
         self.vertices = []
         self.edges = []
 
+        del self.graph
         self.graph = random_graph(V=V, E=E, connected=True)
 
         self.populate()
-        self.display()
+        self.display(run=False)
 
     @classmethod
     def attraction(cls, d):
