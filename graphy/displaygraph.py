@@ -121,9 +121,6 @@ class DisplayGraph(object):
         self.edges = []
         self.populate()
 
-        # Initialize queue for selected vertices
-        self.selected_queue = deque(maxlen=2)
-
         self.threaded = threaded
         self.num_threads = num_threads
 
@@ -134,6 +131,8 @@ class DisplayGraph(object):
         else:
             self.update = self.python_update
 
+    def handle_click(self):
+        pass
 
     def populate(self):
 
@@ -188,7 +187,6 @@ class DisplayGraph(object):
             e.w.x -= x
             e.w.y -= y
 
-
     def draw(self, buttons=True):
 
         self.view.clear()
@@ -212,6 +210,38 @@ class DisplayGraph(object):
         # Run the mainloop to prevent window from closing
         if run:
             self.view.run()
+
+    def new_graph(self):
+        self.selected_queue.clear()
+
+        V = len(self.vertices)
+        E = len(self.edges)
+
+        self.vertices = []
+        self.edges = []
+
+        self.graph = random_graph(V=V, E=E, connected=True)
+
+        self.populate()
+        self.display(run=False)
+
+    @classmethod
+    def attraction(cls, d):
+        return cls.c1 * math.log10(d/cls.c2)
+
+    @classmethod
+    def repulsion(cls, d):
+        denom = d if d > cls.c2 else cls.c2
+        return cls.c3/denom**2
+
+
+class ShortestPathGraph(DisplayGraph):
+
+    def __init__(self, *args, **kwargs):
+        super(ShortestPathGraph, self).__init__(*args, **kwargs)
+
+        # Initialize queue for selected vertices
+        self.selected_queue = deque(maxlen=2)
 
     def handle_click(self, x, y):
         vertex_index = self.get_vertex(x, y)
@@ -274,26 +304,3 @@ class DisplayGraph(object):
             path = self.graph.a_star(a, b)
 
             self.display_path(path)
-
-    def new_graph(self):
-        self.selected_queue.clear()
-
-        V = len(self.vertices)
-        E = len(self.edges)
-
-        self.vertices = []
-        self.edges = []
-
-        self.graph = random_graph(V=V, E=E, connected=True)
-
-        self.populate()
-        self.display(run=False)
-
-    @classmethod
-    def attraction(cls, d):
-        return cls.c1 * math.log10(d/cls.c2)
-
-    @classmethod
-    def repulsion(cls, d):
-        denom = d if d > cls.c2 else cls.c2
-        return cls.c3/denom**2

@@ -1,7 +1,6 @@
 import argparse
-import random
 from graphy.graph import random_graph
-from graphy.displaygraph import DisplayGraph
+from graphy.displaygraph import ShortestPathGraph
 
 
 def parse_args():
@@ -18,6 +17,7 @@ def parse_args():
     parser.add_argument("-nt", "--num-threads", type=int, help="Number of threads to use during layout if using C-extension")
 
     return parser.parse_args()
+
 
 def get_settings(args):
     graph_args = {}
@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
     g = random_graph(**graph_args)
 
-    dg = DisplayGraph(g, **dgraph_args)
+    dg = ShortestPathGraph(g, **dgraph_args)
 
     # Interface setup
     btn_x = -dg.width//2 + 20
