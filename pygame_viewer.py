@@ -1,3 +1,5 @@
+from functools import partial
+
 import pygame
 from pygame.locals import *
 
@@ -19,6 +21,9 @@ class PygameViewer(Viewer):
         self.stroke_col = self.colors.get('gray')
         self.stroke = 2
 
+    def translate(self, x, y):
+        return int(x + self.width/2), int(y + self.height/2)
+
     def get_color(self, config, keyword):
         color = config.get(keyword)
         if color:
@@ -28,8 +33,7 @@ class PygameViewer(Viewer):
 
     def circle(self, x, y, radius, **config):
         color = self.get_color(config, 'color')
-        x = int(x + self.width/2)
-        y = int(y + self.height/2)
+        x, y = self.translate(x, y)
         pygame.draw.circle(self.window, color, (x, y), radius)
         if config.get('stroke_color'):
             stroke = config.get('stroke') or 2
@@ -39,20 +43,21 @@ class PygameViewer(Viewer):
     def line(self, x1, y1, x2, y2, **config):
         color = self.get_color(config, 'color')
         stroke = config.get('weight') or self.stroke
-        x1 = int(x1 + self.width/2)
-        y1 = int(y1 + self.height/2)
-        x2 = int(x2 + self.width/2)
-        y2 = int(y2 + self.height/2)
+        x1, y1 = self.translate(x1, y1)
+        x2, y2 = self.translate(x2, y2)
         pygame.draw.line(self.window, color, (x1, y1), (x2, y2), stroke)
 
-    def rect(self, x1, y1, width, height, **config):
+    def rect(self, x, y, width, height, **config):
+        x, y = self.translate(x, y)
         color = self.get_color(config, 'color')
-        pygame.draw.rect(self.window, color, Rect((x1, y1), (width, height)))
+        pygame.draw.rect(self.window, color, Rect((x, y), (width, height)))
 
     def clear(self):
         self.window.fill(self.clear_col)
 
     def update(self, **kwargs):
+        for button in self._buttons:
+            button.draw()
         pygame.display.update()
 
     def run(self):
@@ -62,10 +67,19 @@ class PygameViewer(Viewer):
                 if self._on_click is not None:
                     # Translate to -x,-y,+x,+y coordinate grid
                     x, y = event.pos[0] - self.width/2, event.pos[1] - self.height/2
+                    self.button_dispatch(x, y)
                     self._on_click(x, y)
-                    #self.update()
             if event.type == QUIT:
                 pygame.quit()
 
+    def draw_button(self, button):
+        self.rect(button.x, button.y, button.width, button.height, stroke=2)
+        x, y = self.translate(button.x, button.y)
+        self.window.blit(button.label, (x, y))
+
+
     def add_button(self, button):
-        pass
+        button.draw = partial(self.draw_button, button)
+        self._buttons.append(button)
+        button.font = pygame.font.SysFont("monospace", 12)
+        button.label = button.font.render(button.text, 1, (255, 255, 255))
