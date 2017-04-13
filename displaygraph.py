@@ -1,8 +1,9 @@
-from turtle_viewer import TurtleViewer
-
-import math
-from graph import Graph, Edge, Vertex, random_graph
 from collections import deque
+import math
+
+from graph import Graph, Edge, Vertex, random_graph
+from pygame_viewer import PygameViewer
+#from turtle_viewer import TurtleViewer
 
 try:
     from fdag import fdag, config
@@ -93,7 +94,7 @@ class DisplayGraph(object):
     c2 = 30.0   # Inversely related to attraction
     c3 = 700.0  # Higher increases repulsion
     c4 = 7      # Repulsion multiplier
-    M = 150     # Number of iterations
+    M = 300     # Number of iterations
 
     def __init__(self, graph, width=1000, height=1000,
                  threaded=False, num_threads=4, update_algo=None):
@@ -106,7 +107,7 @@ class DisplayGraph(object):
         # Layout and display related setup
         self.size = int(math.sqrt(len(graph.vertices)))
 
-        self.view = TurtleViewer(width=width, height=height, on_click=self.handle_click)
+        self.view = PygameViewer(width=width, height=height, on_click=self.handle_click)
 
         self.xscale = (width // 2) // self.size
         self.yscale = (height // 2) // self.size
