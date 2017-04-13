@@ -1,7 +1,7 @@
 import argparse
 import random
-from graph import random_graph
-from displaygraph import DisplayGraph
+from graphy.graph import random_graph
+from graphy.displaygraph import DisplayGraph
 
 
 if __name__ == '__main__':

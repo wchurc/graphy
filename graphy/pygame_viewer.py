@@ -3,7 +3,7 @@ from functools import partial
 import pygame
 from pygame.locals import MOUSEBUTTONDOWN, QUIT, Rect
 
-from viewer import Viewer
+from graphy.viewer import Viewer
 
 
 class PygameViewer(Viewer):

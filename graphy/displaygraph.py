@@ -1,9 +1,8 @@
 from collections import deque
 import math
 
-from graph import Graph, Edge, Vertex, random_graph
-from pygame_viewer import PygameViewer
-#from turtle_viewer import TurtleViewer
+from graphy.graph import Graph, Edge, Vertex, random_graph
+from graphy.pygame_viewer import PygameViewer
 
 try:
     from fdag import fdag, config

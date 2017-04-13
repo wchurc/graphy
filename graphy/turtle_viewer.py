@@ -1,7 +1,7 @@
 from functools import partial
 import turtle
 
-from viewer import Viewer
+from graphy.viewer import Viewer
 
 
 class TurtleViewer(Viewer):
