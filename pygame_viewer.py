@@ -9,27 +9,38 @@ from viewer import Viewer
 class PygameViewer(Viewer):
     def __init__(self, *args, **kwargs):
         super(PygameViewer, self).__init__(*args, **kwargs)
+        # Initialize pygame
         pygame.init()
         self.window = pygame.display.set_mode((self.width, self.height))
+
+        # Dict for translating colors from strings to RGB tuples
         self.colors = {'blue': (0, 0, 255), 'red': (255, 0, 0),
-                       'yellow': (100, 100, 0), 'gray': (100, 100, 100),
+                       'yellow': (255, 255, 0), 'gray': (100, 100, 100),
                        'black': (0, 0, 0), 'white': (255, 255, 255),
-                       'orange': (200, 100, 0)}
+                       'orange': (255, 165, 0)}
+
         # Default values
         self.fill_col = self.colors.get('blue')
         self.clear_col = self.colors.get('white')
         self.stroke_col = self.colors.get('gray')
         self.stroke = 2
 
-    def translate(self, x, y):
-        """Translate from the range ((-x,-y)->(x, y)) to ((0, 0)->(2x, 2y))
-        and flip the y dimension"""
+    def _translate(self, x, y):
+        """Translate between coordinate systems and flip the y dimension.
+        ((-x,-y)->(x, y)) to ((0, 0)->(2x, 2y))
+        """
         return int(x + self.width/2), int(self.height - (y + self.height/2))
 
-    def translate_back(self, x, y):
+    def _translate_back(self, x, y):
+        """Translate between coordinate systems and flip the y dimension.
+        ((0, 0)->(2x, 2y)) to ((-x,-y)->(x, y))
+        """
         return int(x - self.width/2), int(self.height/2 - y)
 
-    def get_color(self, config, keyword):
+    def _get_color(self, config, keyword):
+        """Returns an RGB tuple. Will return default value if the config dict
+        doesn't the supplied keyword or if the requested color isn't known.
+        """
         color = config.get(keyword)
         if color:
             return self.colors.get(color) or self.fill_col
@@ -37,24 +48,31 @@ class PygameViewer(Viewer):
             return self.fill_col
 
     def circle(self, x, y, radius, **config):
-        color = self.get_color(config, 'color')
-        x, y = self.translate(x, y)
+        color = self._get_color(config, 'color')
+        x, y = self._translate(x, y)
+
+        # Draw the circle fill
         pygame.draw.circle(self.window, color, (x, y), radius)
+
+        # Draw a stroke if necessary
         if config.get('stroke_color'):
-            stroke = config.get('stroke') or 2
-            stroke_color = self.get_color(config, 'stroke_color')
+            stroke = config.get('stroke') or self.stroke
+            stroke_color = self._get_color(config, 'stroke_color')
             pygame.draw.circle(self.window, stroke_color, (x, y), radius, stroke)
 
     def line(self, x1, y1, x2, y2, **config):
-        color = self.get_color(config, 'color')
+        color = self._get_color(config, 'color')
         stroke = config.get('weight') or self.stroke
-        x1, y1 = self.translate(x1, y1)
-        x2, y2 = self.translate(x2, y2)
+
+        x1, y1 = self._translate(x1, y1)
+        x2, y2 = self._translate(x2, y2)
+
         pygame.draw.line(self.window, color, (x1, y1), (x2, y2), stroke)
 
     def rect(self, x, y, width, height, **config):
-        x, y = self.translate(x, y)
-        color = self.get_color(config, 'color')
+        x, y = self._translate(x, y)
+        color = self._get_color(config, 'color')
+
         pygame.draw.rect(self.window, color, Rect((x, y - height), (width, height)))
 
     def clear(self):
@@ -67,20 +85,24 @@ class PygameViewer(Viewer):
 
     def run(self):
         while True:
+            # Block until there is an event
             event = pygame.event.wait()
+
             if event.type == MOUSEBUTTONDOWN:
                 if self._on_click is not None:
                     # Translate to -x,-y,+x,+y coordinate grid
-                    x, y = self.translate_back(event.pos[0], event.pos[1])
+                    x, y = self._translate_back(event.pos[0], event.pos[1])
                     self.button_dispatch(x, y)
-                    self._on_click(x, y)
+
                     # TODO -> calling self._on_click here creates recursive call to self.run
+                    self._on_click(x, y)
+
             if event.type == QUIT:
                 pygame.quit()
 
     def draw_button(self, button):
         self.rect(button.x, button.y, button.width, button.height, stroke=2)
-        x, y = self.translate(button.x, button.y)
+        x, y = self._translate(button.x, button.y)
         offset = (button.width - button.label.get_size()[0]) / 2
         self.window.blit(button.label, (x + offset, y - button.height))
 

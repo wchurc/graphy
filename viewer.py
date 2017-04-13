@@ -3,7 +3,12 @@ from functools import partial
 
 
 class Viewer(object, metaclass=ABCMeta):
+    """Abstract base class for drawing primitives, managing buttons,
+    and handling mouse events."""
     def __init__(self, width=1000, height=1000, on_click=None):
+        """width and height are the width and height of the window to be
+        created. on_click is a function that takes x and y parameters to be
+        called when a mouse click event happens."""
         self.width = width
         self.height = height
         self._on_click = on_click
@@ -11,23 +16,28 @@ class Viewer(object, metaclass=ABCMeta):
         self._buttons = []
 
     @abstractmethod
-    def circle():
+    def circle(self, x, y, radius, **config):
+        """Draw a circle at position (x, y) with the given radius"""
         pass
 
     @abstractmethod
-    def line():
+    def line(self, x1, y1, x2, y2, **config):
+        """Draw a line from (x1, y1) to (x2, y2)"""
         pass
 
     @abstractmethod
-    def clear():
+    def clear(self):
+        """Clear the window"""
         pass
 
     @abstractmethod
-    def update():
+    def update(self):
+        """Update the window"""
         pass
 
     @abstractmethod
     def run():
+        """Start the event loop"""
         pass
 
     @abstractmethod
