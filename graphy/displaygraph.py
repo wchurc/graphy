@@ -103,6 +103,9 @@ class DisplayGraph(object):
 
         self.graph = graph
 
+        self.width = width
+        self.height = height
+
         # Layout and display related setup
         self.size = int(math.sqrt(len(graph.vertices)))
 
@@ -120,13 +123,6 @@ class DisplayGraph(object):
 
         # Initialize queue for selected vertices
         self.selected_queue = deque(maxlen=2)
-
-        # Interface setup
-        btn_x = -width//2 + 20
-        btn_y = height//2 - 34
-        self.view.add_button(self.view.Button(btn_x, btn_y - 60, "a_star", self.draw_a_star))
-        self.view.add_button(self.view.Button(btn_x, btn_y - 30, "dijkstra", self.draw_dijkstra))
-        self.view.add_button(self.view.Button(btn_x, btn_y, "new graph", self.new_graph))
 
         self.threaded = threaded
         self.num_threads = num_threads
