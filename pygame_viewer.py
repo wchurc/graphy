@@ -1,7 +1,7 @@
 from functools import partial
 
 import pygame
-from pygame.locals import *
+from pygame.locals import MOUSEBUTTONDOWN, QUIT, Rect
 
 from viewer import Viewer
 
@@ -22,7 +22,12 @@ class PygameViewer(Viewer):
         self.stroke = 2
 
     def translate(self, x, y):
-        return int(x + self.width/2), int(y + self.height/2)
+        """Translate from the range ((-x,-y)->(x, y)) to ((0, 0)->(2x, 2y))
+        and flip the y dimension"""
+        return int(x + self.width/2), int(self.height - (y + self.height/2))
+
+    def translate_back(self, x, y):
+        return int(x - self.width/2), int(self.height/2 - y)
 
     def get_color(self, config, keyword):
         color = config.get(keyword)
@@ -50,7 +55,7 @@ class PygameViewer(Viewer):
     def rect(self, x, y, width, height, **config):
         x, y = self.translate(x, y)
         color = self.get_color(config, 'color')
-        pygame.draw.rect(self.window, color, Rect((x, y), (width, height)))
+        pygame.draw.rect(self.window, color, Rect((x, y - height), (width, height)))
 
     def clear(self):
         self.window.fill(self.clear_col)
@@ -66,20 +71,21 @@ class PygameViewer(Viewer):
             if event.type == MOUSEBUTTONDOWN:
                 if self._on_click is not None:
                     # Translate to -x,-y,+x,+y coordinate grid
-                    x, y = event.pos[0] - self.width/2, event.pos[1] - self.height/2
+                    x, y = self.translate_back(event.pos[0], event.pos[1])
                     self.button_dispatch(x, y)
                     self._on_click(x, y)
+                    # TODO -> calling self._on_click here creates recursive call to self.run
             if event.type == QUIT:
                 pygame.quit()
 
     def draw_button(self, button):
         self.rect(button.x, button.y, button.width, button.height, stroke=2)
         x, y = self.translate(button.x, button.y)
-        self.window.blit(button.label, (x, y))
-
+        offset = (button.width - button.label.get_size()[0]) / 2
+        self.window.blit(button.label, (x + offset, y - button.height))
 
     def add_button(self, button):
         button.draw = partial(self.draw_button, button)
         self._buttons.append(button)
-        button.font = pygame.font.SysFont("monospace", 12)
+        button.font = pygame.font.SysFont("monospace", button.fontsize)
         button.label = button.font.render(button.text, 1, (255, 255, 255))
