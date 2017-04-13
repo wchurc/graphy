@@ -1,17 +1,19 @@
 from abc import ABCMeta, abstractmethod
-from functools import partial
 
 
 class Viewer(object, metaclass=ABCMeta):
     """Abstract base class for drawing primitives, managing buttons,
     and handling mouse events."""
-    def __init__(self, width=1000, height=1000, on_click=None):
+    def __init__(self, width=1000, height=1000, on_mouse_down=None,
+                 on_mouse_up=None, on_mouse_drag=None):
         """width and height are the width and height of the window to be
-        created. on_click is a function that takes x and y parameters to be
+        created. on_mouse_down is a function that takes x and y parameters to be
         called when a mouse click event happens."""
         self.width = width
         self.height = height
-        self._on_click = on_click
+        self._on_mouse_down = on_mouse_down
+        self._on_mouse_up = on_mouse_up
+        self._on_mouse_drag = on_mouse_drag
 
         self._buttons = []
 

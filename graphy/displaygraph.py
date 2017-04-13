@@ -1,7 +1,7 @@
 from collections import deque
 import math
 
-from graphy.graph import Graph, Edge, Vertex, random_graph
+from graphy.graph import Graph, Vertex, random_graph
 from graphy.pygame_viewer import PygameViewer
 
 try:
@@ -15,18 +15,18 @@ else:
 
 class DisplayEdge(object):
 
-    def __init__(self, v, w, view):
+    def __init__(self, v, w, parent):
 
         assert isinstance(v, DisplayVertex) and isinstance(w, DisplayVertex)
 
         self.v = v
         self.w = w
-        self.view = view
+        self.parent = parent
         self.size = 2
 
     def draw(self):
-        self.view.line(self.v.x, self.v.y, self.w.x, self.w.y,
-                  color=self.color, stroke=self.size)
+        self.parent.view.line(self.v.x, self.v.y, self.w.x, self.w.y,
+                              color=self.color, stroke=self.size)
 
     @property
     def color(self):
@@ -37,13 +37,13 @@ class DisplayEdge(object):
 
 class DisplayVertex(object):
 
-    def __init__(self, vertex, index, view):
+    def __init__(self, vertex, index, parent):
 
         assert isinstance(vertex, Vertex)
 
         self.v = vertex
         self.i = index
-        self.view = view
+        self.parent = parent
         self.size = 7
         self._color = 'blue'
         self._marked_color = 'yellow'
@@ -53,23 +53,31 @@ class DisplayVertex(object):
 
     def draw(self):
         stroke_color = 'orange' if self.selected else'black'
-        self.view.circle(self.x, self.y, self.size, color=self.color,
-                    stroke_color=stroke_color)
+        self.parent.view.circle(self.x, self.y, self.size, color=self.color,
+                                stroke_color=stroke_color)
 
     @property
     def x(self):
+        if self.i == self.parent.held_vertex:
+            return self.parent.mouse_pos[0]
         return self.v.x
 
     @x.setter
     def x(self, value):
+        if self.i == self.parent.held_vertex:
+            self.v.x = self.parent.mouse_pos[0]
         self.v.x = value
 
     @property
     def y(self):
+        if self.i == self.parent.held_vertex:
+            return self.parent.mouse_pos[1]
         return self.v.y
 
     @y.setter
     def y(self, value):
+        if self.i == self.parent.held_vertex:
+            self.v.y = self.parent.mouse_pos[1]
         self.v.y = value
 
     @property
@@ -109,7 +117,10 @@ class DisplayGraph(object):
         # Layout and display related setup
         self.size = int(math.sqrt(len(graph.vertices)))
 
-        self.view = PygameViewer(width=width, height=height, on_click=self.handle_click)
+        self.view = PygameViewer(width=width, height=height,
+                                 on_mouse_down=self.on_mouse_down,
+                                 on_mouse_up=self.on_mouse_up,
+                                 on_mouse_drag=self.on_mouse_drag)
 
         self.xscale = (width // 2) // self.size
         self.yscale = (height // 2) // self.size
@@ -131,7 +142,10 @@ class DisplayGraph(object):
         else:
             self.update = self.python_update
 
-    def handle_click(self):
+    def on_mouse_down(self):
+        pass
+
+    def on_mouse_up(self):
         pass
 
     def populate(self):
@@ -142,7 +156,7 @@ class DisplayGraph(object):
         for i, v in enumerate(self.graph.vertices):
             v.x = (x * self.xscale) + self.xoffset
             v.y = (y * self.yscale) + self.yoffset
-            self.vertices.append(DisplayVertex(v, i, self.view))
+            self.vertices.append(DisplayVertex(v, i, self))
 
             x += 1
             if x >= self.size:
@@ -153,7 +167,7 @@ class DisplayGraph(object):
         for i, v in enumerate(self.graph.vertices):
             for w in v:
                 if w > i:
-                    self.edges.append(DisplayEdge(self.vertices[i], self.vertices[w], self.view))
+                    self.edges.append(DisplayEdge(self.vertices[i], self.vertices[w], self))
 
     def c_update(self):
         verts = [(float(self.vertices[x].x), float(self.vertices[x].y))
@@ -174,7 +188,6 @@ class DisplayGraph(object):
                     d = v.distance_to(w)
                     f = self.repulsion(d) * DisplayGraph.c4
                     x, y = [f*x for x in w.unit_to(v)]
-                    #delta = math.sqrt(x**2 + y**2)
                     v.x += x
                     v.y += y
 
@@ -225,6 +238,18 @@ class DisplayGraph(object):
         self.populate()
         self.display(run=False)
 
+    def get_vertex(self, x, y):
+        """Returns the index of the first vertex that collides with the coordinates (x,y).
+        If no collision return None"""
+
+        # Create a temporary Vertex for Vertex.distance_to
+        click_location = Vertex(x, y)
+
+        for i, v in enumerate(self.vertices):
+            if v.distance_to(click_location) <= v.size:
+                return i
+        return None
+
     @classmethod
     def attraction(cls, d):
         return cls.c1 * math.log10(d/cls.c2)
@@ -243,22 +268,10 @@ class ShortestPathGraph(DisplayGraph):
         # Initialize queue for selected vertices
         self.selected_queue = deque(maxlen=2)
 
-    def handle_click(self, x, y):
+    def on_mouse_down(self, x, y):
         vertex_index = self.get_vertex(x, y)
         if vertex_index is not None:
             self.select_vertex(vertex_index)
-
-    def get_vertex(self, x, y):
-        """Returns the index of the first vertex that collides with the coordinates (x,y).
-        If no collision return None"""
-
-        # Create a temporary Vertex for Vertex.distance_to
-        click_location = Vertex(x, y)
-
-        for i, v in enumerate(self.vertices):
-            if v.distance_to(click_location) <= v.size:
-                return i
-        return None
 
     def select_vertex(self, i):
         self.vertices[i].selected = True
@@ -304,3 +317,30 @@ class ShortestPathGraph(DisplayGraph):
             path = self.graph.a_star(a, b)
 
             self.display_path(path)
+
+
+class DragGraph(DisplayGraph):
+
+    def __init__(self, *args, **kwargs):
+        super(DragGraph, self).__init__(*args, **kwargs)
+        self.held_vertex = None
+
+    def on_mouse_down(self, x, y):
+        vertex_index = self.get_vertex(x, y)
+        if vertex_index is not None:
+            self.held_vertex = vertex_index
+            self.mouse_pos = (x, y)
+            self.vertices[vertex_index].held = True
+
+    def on_mouse_up(self, x, y):
+        if self.held_vertex is not None:
+            self.held_vertex = None
+        self.mouse_pos = (x, y)
+        self.display(run=False)
+
+    def on_mouse_drag(self, x, y):
+        if self.held_vertex is not None:
+            self.vertices[self.held_vertex].x = x
+            self.vertices[self.held_vertex].y = y
+            self.mouse_pos = (x, y)
+            self.draw()

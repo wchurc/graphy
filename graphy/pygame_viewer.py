@@ -1,7 +1,7 @@
 from functools import partial
 
 import pygame
-from pygame.locals import MOUSEBUTTONDOWN, QUIT, Rect
+from pygame.locals import MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION, QUIT, Rect
 
 from graphy.viewer import Viewer
 
@@ -89,14 +89,24 @@ class PygameViewer(Viewer):
             event = pygame.event.wait()
 
             if event.type == MOUSEBUTTONDOWN:
-                if self._on_click is not None:
+                if self._on_mouse_down is not None:
                     # Translate to -x,-y,+x,+y coordinate grid
                     x, y = self._translate_back(event.pos[0], event.pos[1])
                     self.button_dispatch(x, y)
 
-                    self._on_click(x, y)
+                    self._on_mouse_down(x, y)
 
-            if event.type == QUIT:
+            elif event.type == MOUSEBUTTONUP:
+                if self._on_mouse_up is not None:
+                    x, y = self._translate_back(event.pos[0], event.pos[1])
+                    self._on_mouse_up(x, y)
+
+            elif event.type == MOUSEMOTION:
+                if self._on_mouse_drag:
+                    x, y = self._translate_back(event.pos[0], event.pos[1])
+                    self._on_mouse_drag(x, y)
+
+            elif event.type == QUIT:
                 pygame.quit()
 
     def draw_button(self, button):
