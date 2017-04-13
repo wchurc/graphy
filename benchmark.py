@@ -5,11 +5,11 @@ import math
 
 from matplotlib import pyplot as plt
 
-from graph import random_graph, Graph
-from displaygraph import DisplayGraph
+from graphy.graph import random_graph, Graph
+from graphy.displaygraph import DisplayGraph
 
 try:
-    from displaygraph import config
+    from graphy.displaygraph import config
 except ImportError:
     print("Couldn't find fdag... skipping C-extension benchmarks.")
     fdag_imported = False
@@ -36,6 +36,8 @@ class BenchmarkDisplayGraph(DisplayGraph):
         self.yscale = (1028 // 2) // self.size
         self.xoffset = -1500 // 4
         self.yoffset = -1028 // 4
+
+        self.view = None
 
         # Graph setup
         self.vertices = []
