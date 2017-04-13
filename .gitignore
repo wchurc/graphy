@@ -1,5 +1,4 @@
 __pycache__
 *.pyc
 *.swp
-
-fdag/build
+graphy/fdag/build

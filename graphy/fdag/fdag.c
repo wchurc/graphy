@@ -312,6 +312,8 @@ fdag(PyObject *self, PyObject *args)
 	// Should do this on failure as well...
 	Py_DECREF(vert_iter);
 	Py_DECREF(edge_iter);
+	Py_DECREF(vert_obj);
+	Py_DECREF(edge_obj);
 
 	// Do what we came here for
 	if (THREADED) {
@@ -345,6 +347,9 @@ fdag(PyObject *self, PyObject *args)
 		// incorrect
 		PyList_SET_ITEM(ret_list, i, entry);
 	}
+
+	free(vertices);
+	free(edges);
 
 	return ret_list;
 }

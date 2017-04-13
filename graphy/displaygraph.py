@@ -284,7 +284,6 @@ class DisplayGraph(object):
         self.vertices = []
         self.edges = []
 
-        del self.graph
         self.graph = random_graph(V=V, E=E, connected=True)
 
         self.populate()
@@ -298,5 +297,3 @@ class DisplayGraph(object):
     def repulsion(cls, d):
         denom = d if d > cls.c2 else cls.c2
         return cls.c3/denom**2
-
-
