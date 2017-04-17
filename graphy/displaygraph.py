@@ -58,26 +58,18 @@ class DisplayVertex(object):
 
     @property
     def x(self):
-        if self.i == self.parent.held_vertex:
-            return self.parent.mouse_pos[0]
         return self.v.x
 
     @x.setter
     def x(self, value):
-        if self.i == self.parent.held_vertex:
-            self.v.x = self.parent.mouse_pos[0]
         self.v.x = value
 
     @property
     def y(self):
-        if self.i == self.parent.held_vertex:
-            return self.parent.mouse_pos[1]
         return self.v.y
 
     @y.setter
     def y(self, value):
-        if self.i == self.parent.held_vertex:
-            self.v.y = self.parent.mouse_pos[1]
         self.v.y = value
 
     @property
@@ -142,10 +134,13 @@ class DisplayGraph(object):
         else:
             self.update = self.python_update
 
-    def on_mouse_down(self):
+    def on_mouse_down(self, x, y):
         pass
 
-    def on_mouse_up(self):
+    def on_mouse_up(self, x, y):
+        pass
+
+    def on_mouse_drag(self, x, y):
         pass
 
     def populate(self):
@@ -325,22 +320,37 @@ class DragGraph(DisplayGraph):
         super(DragGraph, self).__init__(*args, **kwargs)
         self.held_vertex = None
 
+    def display(self, run=True):
+        super(DragGraph, self).display(run=False)
+        self.lengths = [e.v.distance_to(e.w) for e in self.edges]
+        if run:
+            self.view.run()
+
     def on_mouse_down(self, x, y):
         vertex_index = self.get_vertex(x, y)
         if vertex_index is not None:
             self.held_vertex = vertex_index
-            self.mouse_pos = (x, y)
             self.vertices[vertex_index].held = True
 
     def on_mouse_up(self, x, y):
         if self.held_vertex is not None:
             self.held_vertex = None
-        self.mouse_pos = (x, y)
-        self.display(run=False)
 
     def on_mouse_drag(self, x, y):
         if self.held_vertex is not None:
-            self.vertices[self.held_vertex].x = x
-            self.vertices[self.held_vertex].y = y
-            self.mouse_pos = (x, y)
+            self.relax(self.vertices[self.held_vertex], (x, y))
             self.draw()
+
+    def relax(self, vertex, newpos):
+
+        vertex.x, vertex.y = newpos
+
+        for i, e in enumerate(self.edges):
+            rest_len = self.lengths[i]
+            delta = (e.w.x - e.v.x, e.w.y - e.v.y)
+            delta_len = e.w.distance_to(e.v)
+            diff = (delta_len - rest_len)/delta_len
+            e.w.x -= delta[0]*0.5*diff
+            e.w.y -= delta[1]*0.5*diff
+            e.v.x += delta[0]*0.5*diff
+            e.v.y += delta[1]*0.5*diff
