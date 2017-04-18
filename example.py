@@ -1,6 +1,8 @@
-import argparse
 from graphy.graph import random_graph
-from graphy.displaygraph import ShortestPathGraph
+from graphy.displaygraph import DisplayGraph
+from graphy.components import Pathfinder
+
+import argparse
 
 
 def parse_args():
@@ -53,13 +55,15 @@ if __name__ == '__main__':
 
     g = random_graph(**graph_args)
 
-    dg = ShortestPathGraph(g, **dgraph_args)
+    dg = DisplayGraph(g, **dgraph_args)
+    pf = Pathfinder(dg)
+    dg.components.append(pf)
 
     # Interface setup
     btn_x = -dg.width//2 + 20
     btn_y = dg.height//2 - 34
-    dg.view.add_button(dg.view.Button(btn_x, btn_y - 60, "a_star", dg.draw_a_star))
-    dg.view.add_button(dg.view.Button(btn_x, btn_y - 30, "dijkstra", dg.draw_dijkstra))
+    dg.view.add_button(dg.view.Button(btn_x, btn_y - 60, "a_star", pf.draw_a_star))
+    dg.view.add_button(dg.view.Button(btn_x, btn_y - 30, "dijkstra", pf.draw_dijkstra))
     dg.view.add_button(dg.view.Button(btn_x, btn_y, "new graph", dg.new_graph))
 
     dg.display()

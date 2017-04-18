@@ -15,14 +15,14 @@ else:
 
 class DisplayEdge(object):
 
-    def __init__(self, v, w, parent):
+    def __init__(self, v, w, parent, size=2):
 
         assert isinstance(v, DisplayVertex) and isinstance(w, DisplayVertex)
 
         self.v = v
         self.w = w
         self.parent = parent
-        self.size = 2
+        self.size = size
 
     def draw(self):
         self.parent.view.line(self.v.x, self.v.y, self.w.x, self.w.y,
@@ -37,14 +37,14 @@ class DisplayEdge(object):
 
 class DisplayVertex(object):
 
-    def __init__(self, vertex, index, parent):
+    def __init__(self, vertex, index, parent, size=7):
 
         assert isinstance(vertex, Vertex)
 
         self.v = vertex
         self.i = index
         self.parent = parent
-        self.size = 7
+        self.size = size
         self._color = 'blue'
         self._marked_color = 'yellow'
         self._highlighted_color = 'red'
@@ -103,6 +103,8 @@ class DisplayGraph(object):
 
         self.graph = graph
 
+        self.components = []
+
         self.width = width
         self.height = height
 
@@ -130,18 +132,22 @@ class DisplayGraph(object):
         # Selected update method
         if update_algo == 'c_update' and fdag_imported is True:
             self.update = self.c_update
-            config(self.c1, self.c2, self.c3, self.c4, self.threaded, self.num_threads)
+            config(self.c1, self.c2, self.c3, self.c4,
+                   self.threaded, self.num_threads)
         else:
             self.update = self.python_update
 
     def on_mouse_down(self, x, y):
-        pass
+        for component in self.components:
+            component.on_mouse_down(x, y)
 
     def on_mouse_up(self, x, y):
-        pass
+        for component in self.components:
+            component.on_mouse_up(x, y)
 
     def on_mouse_drag(self, x, y):
-        pass
+        for component in self.components:
+            component.on_mouse_drag(x, y)
 
     def populate(self):
 
@@ -162,7 +168,8 @@ class DisplayGraph(object):
         for i, v in enumerate(self.graph.vertices):
             for w in v:
                 if w > i:
-                    self.edges.append(DisplayEdge(self.vertices[i], self.vertices[w], self))
+                    self.edges.append(DisplayEdge(self.vertices[i],
+                                                  self.vertices[w], self))
 
     def c_update(self):
         verts = [(float(self.vertices[x].x), float(self.vertices[x].y))
@@ -220,7 +227,6 @@ class DisplayGraph(object):
             self.view.run()
 
     def new_graph(self):
-        self.selected_queue.clear()
 
         V = len(self.vertices)
         E = len(self.edges)
@@ -231,11 +237,15 @@ class DisplayGraph(object):
         self.graph = random_graph(V=V, E=E, connected=True)
 
         self.populate()
+
+        for component in self.components:
+            component.reset()
+
         self.display(run=False)
 
     def get_vertex(self, x, y):
-        """Returns the index of the first vertex that collides with the coordinates (x,y).
-        If no collision return None"""
+        """Returns the index of the first vertex that collides with the
+        coordinates (x,y). If no collision return None"""
 
         # Create a temporary Vertex for Vertex.distance_to
         click_location = Vertex(x, y)
@@ -253,104 +263,3 @@ class DisplayGraph(object):
     def repulsion(cls, d):
         denom = d if d > cls.c2 else cls.c2
         return cls.c3/denom**2
-
-
-class ShortestPathGraph(DisplayGraph):
-
-    def __init__(self, *args, **kwargs):
-        super(ShortestPathGraph, self).__init__(*args, **kwargs)
-
-        # Initialize queue for selected vertices
-        self.selected_queue = deque(maxlen=2)
-
-    def on_mouse_down(self, x, y):
-        vertex_index = self.get_vertex(x, y)
-        if vertex_index is not None:
-            self.select_vertex(vertex_index)
-
-    def select_vertex(self, i):
-        self.vertices[i].selected = True
-
-        if len(self.selected_queue) == 2:
-            v = self.selected_queue.popleft()
-            self.vertices[v].selected = False
-
-        self.selected_queue.append(i)
-
-        self.draw()
-
-    def display_path(self, path):
-        # Highlight path vertices
-        for i in path:
-            self.vertices[i].highlighted = True
-            self.vertices[i].draw()
-
-        self.draw()
-
-    def draw_dijkstra(self):
-        # Clear any previous highlighted vertices
-        for v in self.vertices:
-            v.v.marked = False
-            v.highlighted = False
-            v.selected = False
-
-        if len(self.selected_queue) == 2:
-            a, b = iter(self.selected_queue)
-            path = self.graph.dijkstra(a, b)
-
-            self.display_path(path)
-
-    def draw_a_star(self):
-        # Clear any previous highlighted vertices
-        for v in self.vertices:
-            v.v.marked = False
-            v.highlighted = False
-            v.selected = False
-
-        if len(self.selected_queue) == 2:
-            a, b = iter(self.selected_queue)
-            path = self.graph.a_star(a, b)
-
-            self.display_path(path)
-
-
-class DragGraph(DisplayGraph):
-
-    def __init__(self, *args, **kwargs):
-        super(DragGraph, self).__init__(*args, **kwargs)
-        self.held_vertex = None
-
-    def display(self, run=True):
-        super(DragGraph, self).display(run=False)
-        self.lengths = [e.v.distance_to(e.w) for e in self.edges]
-        if run:
-            self.view.run()
-
-    def on_mouse_down(self, x, y):
-        vertex_index = self.get_vertex(x, y)
-        if vertex_index is not None:
-            self.held_vertex = vertex_index
-            self.vertices[vertex_index].held = True
-
-    def on_mouse_up(self, x, y):
-        if self.held_vertex is not None:
-            self.held_vertex = None
-
-    def on_mouse_drag(self, x, y):
-        if self.held_vertex is not None:
-            self.relax(self.vertices[self.held_vertex], (x, y))
-            self.draw()
-
-    def relax(self, vertex, newpos):
-
-        vertex.x, vertex.y = newpos
-
-        for i, e in enumerate(self.edges):
-            rest_len = self.lengths[i]
-            delta = (e.w.x - e.v.x, e.w.y - e.v.y)
-            delta_len = e.w.distance_to(e.v)
-            diff = (delta_len - rest_len)/delta_len
-            e.w.x -= delta[0]*0.5*diff
-            e.w.y -= delta[1]*0.5*diff
-            e.v.x += delta[0]*0.5*diff
-            e.v.y += delta[1]*0.5*diff
