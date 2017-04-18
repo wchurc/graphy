@@ -1,6 +1,6 @@
 from graphy.graph import random_graph
 from graphy.displaygraph import DisplayGraph
-from graphy.components import Pathfinder
+from graphy.components import Dragger, Pathfinder
 
 import argparse
 
@@ -57,7 +57,9 @@ if __name__ == '__main__':
 
     dg = DisplayGraph(g, **dgraph_args)
     pf = Pathfinder(dg)
+    dr = Dragger(dg)
     dg.components.append(pf)
+    dg.components.append(dr)
 
     # Interface setup
     btn_x = -dg.width//2 + 20

@@ -63,6 +63,6 @@ class Viewer(object, metaclass=ABCMeta):
 
     def button_dispatch(self, x, y):
         for button in self._buttons:
-            if x >= button.x and x <= (button.y + button.width) and \
+            if x >= button.x and x <= (button.x + button.width) and \
                y >= button.y and y <= (button.y + button.height):
                 button.onclick()
