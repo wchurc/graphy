@@ -1,16 +1,7 @@
-from collections import deque
-import math
-
 from graphy.graph import Graph, Vertex, random_graph
-from graphy.pygame_viewer import PygameViewer
+from graphy import Viewer, fdag, config, fdag_imported
 
-try:
-    from fdag import fdag, config
-except ImportError:
-    fdag_imported = False
-    print("Failed to import fdag. C-extensions are disabled")
-else:
-    fdag_imported = True
+import math
 
 
 class DisplayEdge(object):
@@ -111,10 +102,10 @@ class DisplayGraph(object):
         # Layout and display related setup
         self.size = int(math.sqrt(len(graph.vertices)))
 
-        self.view = PygameViewer(width=width, height=height,
-                                 on_mouse_down=self.on_mouse_down,
-                                 on_mouse_up=self.on_mouse_up,
-                                 on_mouse_drag=self.on_mouse_drag)
+        self.view = Viewer(width=width, height=height,
+                           on_mouse_down=self.on_mouse_down,
+                           on_mouse_up=self.on_mouse_up,
+                           on_mouse_drag=self.on_mouse_drag)
 
         self.xscale = (width // 2) // self.size
         self.yscale = (height // 2) // self.size
