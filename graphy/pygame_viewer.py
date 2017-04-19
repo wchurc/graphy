@@ -25,18 +25,6 @@ class PygameViewer(Viewer):
         self.stroke_col = self.colors.get('gray')
         self.stroke = 2
 
-    def _translate(self, x, y):
-        """Translate between coordinate systems and flip the y dimension.
-        ((-x,-y)->(x, y)) to ((0, 0)->(2x, 2y))
-        """
-        return int(x + self.width/2), int(self.height - (y + self.height/2))
-
-    def _translate_back(self, x, y):
-        """Translate between coordinate systems and flip the y dimension.
-        ((0, 0)->(2x, 2y)) to ((-x,-y)->(x, y))
-        """
-        return int(x - self.width/2), int(self.height/2 - y)
-
     def _get_color(self, config, keyword):
         """Returns an RGB tuple. Will return default value if the config dict
         doesn't the supplied keyword or if the requested color isn't known.
@@ -49,7 +37,7 @@ class PygameViewer(Viewer):
 
     def circle(self, x, y, radius, **config):
         color = self._get_color(config, 'color')
-        x, y = self._translate(x, y)
+        x, y = self.translate(x, y)
 
         # Draw the circle fill
         pygame.draw.circle(self.window, color, (x, y), radius)
@@ -64,13 +52,13 @@ class PygameViewer(Viewer):
         color = self._get_color(config, 'color')
         stroke = config.get('weight') or self.stroke
 
-        x1, y1 = self._translate(x1, y1)
-        x2, y2 = self._translate(x2, y2)
+        x1, y1 = self.translate(x1, y1)
+        x2, y2 = self.translate(x2, y2)
 
         pygame.draw.line(self.window, color, (x1, y1), (x2, y2), stroke)
 
     def rect(self, x, y, width, height, **config):
-        x, y = self._translate(x, y)
+        x, y = self.translate(x, y)
         color = self._get_color(config, 'color')
 
         pygame.draw.rect(self.window, color, Rect((x, y - height), (width, height)))
@@ -91,19 +79,19 @@ class PygameViewer(Viewer):
             if event.type == MOUSEBUTTONDOWN:
                 if self._on_mouse_down is not None:
                     # Translate to -x,-y,+x,+y coordinate grid
-                    x, y = self._translate_back(event.pos[0], event.pos[1])
+                    x, y = self.translate_back(event.pos[0], event.pos[1])
                     self.button_dispatch(x, y)
 
                     self._on_mouse_down(x, y)
 
             elif event.type == MOUSEBUTTONUP:
                 if self._on_mouse_up is not None:
-                    x, y = self._translate_back(event.pos[0], event.pos[1])
+                    x, y = self.translate_back(event.pos[0], event.pos[1])
                     self._on_mouse_up(x, y)
 
             elif event.type == MOUSEMOTION:
                 if self._on_mouse_drag:
-                    x, y = self._translate_back(event.pos[0], event.pos[1])
+                    x, y = self.translate_back(event.pos[0], event.pos[1])
                     self._on_mouse_drag(x, y)
 
             elif event.type == QUIT:
@@ -111,7 +99,7 @@ class PygameViewer(Viewer):
 
     def draw_button(self, button):
         self.rect(button.x, button.y, button.width, button.height, stroke=2)
-        x, y = self._translate(button.x, button.y)
+        x, y = self.translate(button.x, button.y)
         offset = (button.width - button.label.get_size()[0]) / 2
         self.window.blit(button.label, (x + offset, y - button.height))
 

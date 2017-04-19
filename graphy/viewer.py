@@ -66,3 +66,16 @@ class Viewer(object, metaclass=ABCMeta):
             if x >= button.x and x <= (button.x + button.width) and \
                y >= button.y and y <= (button.y + button.height):
                 button.onclick()
+
+    def translate(self, x, y):
+        """Translate between coordinate systems and flip the y dimension.
+        ((-x,-y)->(x, y)) to ((0, 0)->(2x, 2y))
+        """
+        return int(x + self.width/2), int(self.height - (y + self.height/2))
+
+    def translate_back(self, x, y):
+        """Translate between coordinate systems and flip the y dimension.
+        ((0, 0)->(2x, 2y)) to ((-x,-y)->(x, y))
+        """
+        return int(x - self.width/2), int(self.height/2 - y)
+

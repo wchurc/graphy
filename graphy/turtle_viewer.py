@@ -15,7 +15,10 @@ class TurtleViewer(Viewer):
         self.t.speed(0)
 
         # Tell turtle how to handle clicks
-        self.window.onclick(self._handle_click)
+        self.window.onclick(self.on_mouse_down)
+        c = self.t.getscreen()._canvas._canvas
+        c.bind("<B1-Motion>", self.on_mouse_drag)
+        c.bind("<ButtonRelease-1>", self.on_mouse_up)
 
         # Default values
         self.fill_col = 'blue'
@@ -87,10 +90,20 @@ class TurtleViewer(Viewer):
         btn.t.setpos(btn.x + (btn.width / 2), btn.y)
         btn.t.write(btn.text, align='center', font=('Arial', btn.fontsize, 'normal'))
 
-
-    def _handle_click(self, x, y):
+    def on_mouse_down(self, x, y):
+        self.t.setpos(x, y)
         self.button_dispatch(x, y)
 
         # Pass click coordinates to client code
-        if self._on_click:
-            self._on_click(x, y)
+        if self._on_mouse_down is not None:
+            self._on_mouse_down(x, y)
+
+    def on_mouse_drag(self, event):
+        x, y = self.translate_back(event.x, event.y)
+        if self._on_mouse_drag is not None:
+            self._on_mouse_drag(x, y)
+
+    def on_mouse_up(self, event):
+        x, y = self.translate_back(event.x, event.y)
+        if self.on_mouse_up is not None:
+            self._on_mouse_up(x, y)
