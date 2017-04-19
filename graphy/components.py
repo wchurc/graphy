@@ -84,6 +84,8 @@ class Dragger(Component):
     def __init__(self, display_graph):
         self.held_vertex = None
         self.dg = display_graph
+        self.tick = 0
+        self.tick_max = 4
 
     def on_mouse_down(self, x, y):
         vertex_index = self.dg.get_vertex(x, y)
@@ -96,9 +98,11 @@ class Dragger(Component):
             self.held_vertex = None
 
     def on_mouse_drag(self, x, y):
-        if self.held_vertex is not None:
+        self.tick += 1
+        if self.held_vertex is not None and self.tick > self.tick_max:
             self.relax(self.dg.vertices[self.held_vertex], (x, y))
             self.dg.draw()
+            self.tick = 0
 
     def relax(self, vertex, newpos):
 
