@@ -1,5 +1,5 @@
 from graphy.graph import Graph, Vertex, random_graph
-from graphy import Viewer, fdag, config, fdag_imported
+from graphy import Viewer, fdag, config
 
 import math
 
@@ -121,7 +121,7 @@ class DisplayGraph(object):
         self.num_threads = num_threads
 
         # Selected update method
-        if update_algo == 'c_update' and fdag_imported is True:
+        if update_algo == 'c_update' and fdag is not None:
             self.update = self.c_update
             config(self.c1, self.c2, self.c3, self.c4,
                    self.threaded, self.num_threads)

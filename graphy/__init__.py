@@ -7,7 +7,8 @@ except ImportError:
 try:
     from fdag import fdag, config
 except ImportError:
-    fdag_imported = False
+    fdag = None
+    config = None
     print("Failed to import fdag. C-extensions are disabled")
 else:
     fdag_imported = True
