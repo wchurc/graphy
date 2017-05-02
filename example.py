@@ -9,9 +9,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Test DisplayGraph")
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-c", "--c-single-threaded", action="store_true")
-    group.add_argument("-ct", "--c-multi-threaded", action="store_true")
-    group.add_argument("-p", "--python", action="store_true")
+    group.add_argument("-c", "--c-update", action="store_true")
+    group.add_argument("-p", "--python-update", action="store_true")
 
     parser.add_argument("-v", "--vertices", type=int, help="Number of vertices in graph")
     parser.add_argument("-e", "--edges", type=int, help="Number of edges in graph")
@@ -35,14 +34,12 @@ def get_settings(args):
 
     dgraph_args = {}
 
-    if args.c_single_threaded or args.c_multi_threaded:
-        dgraph_args['update_algo'] = 'c_update'
-        if args.c_multi_threaded:
-            dgraph_args['threaded'] = True
-            if args.num_threads:
-                dgraph_args['num_threads'] = args.num_threads
-    elif args.python:
+    if args.python_update:
         dgraph_args['update_algo'] = 'python_update'
+    else:
+        dgraph_args['update_algo'] = 'c_update'
+        if args.num_threads:
+            dgraph_args['num_threads'] = args.num_threads
 
     return graph_args, dgraph_args
 
